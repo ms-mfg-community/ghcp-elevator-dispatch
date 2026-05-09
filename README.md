@@ -2,6 +2,12 @@
 
 Azure-hosted AI-enabled elevator dispatch sample built for Azure Functions.
 
+## Lab tasks
+
+- [ ] 00.00.add-meta-prompt
+- [ ] 01.00.initialize-project
+- [ ] 02.00 randomize-passenger-appearance
+
 ## What it does
 
 This project exposes a `POST /api/dispatch` Azure Function that:
