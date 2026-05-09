@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elevator Dispatch Workshop</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="panel hero">
+        <div>
+          <p class="eyebrow">Workshop starter</p>
+          <h1>Elevator Dispatch System</h1>
+          <p class="lede">
+            A 5-floor, 4-elevator simulation with a live dashboard, animated cabs, and passenger dots.
+          </p>
+        </div>
+        <div class="hero-meta">
+          <div>
+            <span class="label">Tick</span>
+            <strong id="tick-value">0</strong>
+          </div>
+          <div>
+            <span class="label">Queued</span>
+            <strong id="queued-value">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel controls-panel">
+        <form id="passenger-form" class="controls">
+          <label>
+            Origin
+            <select id="origin-floor" name="origin_floor"></select>
+          </label>
+          <label>
+            Destination
+            <select id="destination-floor" name="destination_floor"></select>
+          </label>
+          <button type="submit">Add passenger</button>
+          <button type="button" id="pause-toggle">Pause simulation</button>
+        </form>
+        <p id="status-message" class="status-message">Connecting to simulation...</p>
+      </section>
+
+      <section class="panel building-panel">
+        <div class="building-header">
+          <h2>Live building view</h2>
+          <p>Passengers waiting on floors and riding in cabs appear as circles.</p>
+        </div>
+        <div id="building-view" class="building-view"></div>
+      </section>
+
+      <section class="panel dashboard-panel">
+        <h2>Elevator status</h2>
+        <div id="elevator-dashboard" class="dashboard"></div>
+      </section>
+    </main>
+
+    <script type="module" src="/static/main.js"></script>
+  </body>
+</html>
