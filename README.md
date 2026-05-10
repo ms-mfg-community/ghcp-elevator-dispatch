@@ -5,10 +5,6 @@ A GitHub Copilot workshop project that simulates a 5-floor,
 
 ## Lab tasks
 
-- [ ] 00.00.add-meta-prompt
-- [ ] 01.00.initialize-project
-- [ ] 02.00 randomize-passenger-appearance
-
 ## What it does
 
 The application under `workspace/` runs an in-memory elevator

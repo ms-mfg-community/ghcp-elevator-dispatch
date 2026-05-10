@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import random
 from contextlib import suppress
 
 from simulation.building import Building
@@ -8,12 +9,16 @@ from simulation.dispatcher import Dispatcher
 from simulation.elevator import Elevator
 from simulation.passenger import Passenger
 
+# Probability that a new passenger appears on any given tick (0.0–1.0).
+DEFAULT_SPAWN_CHANCE = 0.3
+
 
 class SimulationEngine:
-    def __init__(self, tick_interval: float = 1.0) -> None:
+    def __init__(self, tick_interval: float = 1.0, spawn_chance: float = DEFAULT_SPAWN_CHANCE) -> None:
         self.building = Building()
         self.dispatcher = Dispatcher()
         self.tick_interval = tick_interval
+        self.spawn_chance = spawn_chance
         self._lock = asyncio.Lock()
         self._listeners: set[asyncio.Queue[dict[str, object]]] = set()
         self._running = True
@@ -65,9 +70,7 @@ class SimulationEngine:
                 for elevator in self.building.elevators:
                     self._advance_elevator(elevator)
 
-                if self.building.tick % 8 == 0:
-                    # TODO: Replace this placeholder with randomized passenger generation in the next lab step.
-                    self.building.status_message = "Simulation running. Add passengers from the dashboard."
+                self._maybe_spawn_passenger()
 
                 snapshot = self.building.snapshot()
 
@@ -131,3 +134,16 @@ class SimulationEngine:
                 f"{elevator.id} serviced floor {elevator.current_floor}: "
                 f"{exited_count} exited, {boarded_count} boarded."
             )
+
+    def _maybe_spawn_passenger(self) -> None:
+        if random.random() >= self.spawn_chance:
+            return
+
+        floor_count = self.building.floor_count
+        origin = random.randint(1, floor_count)
+        destination = random.choice(
+            [f for f in range(1, floor_count + 1) if f != origin]
+        )
+        passenger = Passenger(origin_floor=origin, destination_floor=destination)
+        self.building.add_passenger(passenger)
+        self.dispatcher.assign_passenger(self.building, passenger)
