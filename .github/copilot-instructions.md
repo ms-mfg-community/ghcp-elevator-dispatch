@@ -21,6 +21,7 @@ This repository is a workshop project for an elevator dispatch simulation. Keep 
 
 ## Python Conventions
 
+- Always use a Python virtual environment (`python -m venv .venv`) inside `workspace/`. Do not install packages into the global Python environment.
 - Use type hints and dataclasses consistently with the existing simulation modules.
 - Prefer async-safe access through `SimulationEngine` methods when API code reads or mutates building state.
 - Do not bypass the engine lock for state mutations that can be reached from FastAPI routes or WebSocket updates.
@@ -36,7 +37,15 @@ This repository is a workshop project for an elevator dispatch simulation. Keep 
 
 ## Validation Commands
 
-Run commands from the `workspace/` directory unless noted otherwise.
+Run commands from the `workspace/` directory with the
+virtual environment activated unless noted otherwise.
+
+```bash
+python -m venv .venv          # create (first time)
+# Windows: .venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
 
 ```bash
 python -m compileall .

@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 
+from simulation.passenger import Passenger
 from simulation.simulation import SimulationEngine
 
 
@@ -46,6 +47,18 @@ class SpawnPassengerTests(unittest.TestCase):
         self.assertEqual(len(waiting), 1)
         self.assertEqual(waiting[0].origin_floor, 2)
         self.assertEqual(waiting[0].destination_floor, 5)
+
+    def test_counts_passengers_moved_when_they_exit(self) -> None:
+        engine = SimulationEngine(spawn_chance=0.0)
+        elevator = engine.building.elevators[0]
+        elevator.current_floor = 5
+        elevator.passengers = [Passenger(origin_floor=1, destination_floor=5)]
+        elevator.add_stop(5)
+
+        engine._advance_elevator(elevator)
+
+        self.assertEqual(elevator.passengers_moved, 1)
+        self.assertEqual(engine.building.snapshot()["elevators"][0]["passengers_moved"], 1)
 
 
 if __name__ == "__main__":

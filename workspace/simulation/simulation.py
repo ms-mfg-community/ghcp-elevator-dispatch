@@ -120,6 +120,7 @@ class SimulationEngine:
         elevator.door_ticks_remaining = 1
 
         exiting = elevator.drop_off_passengers()
+        elevator.passengers_moved += len(exiting)
         waiting = self.building.waiting_passengers[elevator.current_floor]
         boarded, remaining = elevator.board_passengers(waiting)
         self.building.waiting_passengers[elevator.current_floor] = remaining

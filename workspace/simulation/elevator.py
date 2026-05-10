@@ -19,6 +19,7 @@ class Elevator:
     passengers: list[Passenger] = field(default_factory=list)
     scheduled_stops: set[int] = field(default_factory=set)
     door_ticks_remaining: int = 0
+    passengers_moved: int = 0
 
     @property
     def available_capacity(self) -> int:
@@ -88,6 +89,7 @@ class Elevator:
             "door_state": self.door_state,
             "capacity": self.capacity,
             "available_capacity": self.available_capacity,
+            "passengers_moved": self.passengers_moved,
             "passengers": [passenger.to_dict() for passenger in self.passengers],
             "scheduled_stops": sorted(self.scheduled_stops),
         }

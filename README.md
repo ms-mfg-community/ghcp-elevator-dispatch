@@ -13,6 +13,12 @@ backend exposes REST endpoints and a WebSocket feed, and an
 HTML/CSS/JS dashboard renders the live building view with
 animated elevator cabs and passenger dots.
 
+## Dashboard target state
+
+Use this screenshot as the target state for the live dashboard layout.
+
+![Dashboard target state](workspace/images/live-dashboard-target-state.png)
+
 ## Project layout
 
 ```text
@@ -28,20 +34,36 @@ workspace/
 
 All commands run from the `workspace/` directory.
 
-Install Python dependencies:
+Create and activate a virtual environment:
 
 ```bash
 cd workspace
+python -m venv .venv
+```
+
+Activate it:
+
+```bash
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+
+# macOS / Linux
+source .venv/bin/activate
+```
+
+Install Python dependencies:
+
+```bash
 python -m pip install -r requirements.txt
 ```
 
 Start the app:
 
 ```bash
-python -m uvicorn api.server:app --reload
+python -m uvicorn api.server:app --reload --port 8080
 ```
 
-Open <http://127.0.0.1:8000> to view the dashboard.
+Open <http://127.0.0.1:8080> to view the dashboard.
 
 ## Validation
 
