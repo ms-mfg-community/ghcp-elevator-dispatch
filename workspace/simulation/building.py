@@ -23,6 +23,7 @@ class Building:
     pending_passengers: list[Passenger] = field(default_factory=list)
     tick: int = 0
     paused: bool = False
+    finished: bool = False
     status_message: str = "Simulation ready. Add a passenger to begin."
     total_passenger_wait_time_seconds: float = 0.0
     boarded_passenger_count: int = 0
@@ -71,6 +72,7 @@ class Building:
         return {
             "tick": self.tick,
             "paused": self.paused,
+            "finished": self.finished,
             "status_message": self.status_message,
             "queued_requests": len(self.pending_passengers),
             "average_passenger_wait_time_seconds": self.average_passenger_wait_time_seconds,

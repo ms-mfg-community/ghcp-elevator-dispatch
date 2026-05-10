@@ -242,6 +242,26 @@ button:hover {
     color: white;
 }
 
+.elevator-cab.cab-ev-01 {
+    background: linear-gradient(180deg, #2e8b57, #1a5e38);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 16px 30px rgba(46, 139, 87, 0.22);
+}
+
+.elevator-cab.cab-ev-02 {
+    background: linear-gradient(180deg, #3a7bd5, #1e4a8a);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 16px 30px rgba(58, 123, 213, 0.22);
+}
+
+.elevator-cab.cab-ev-03 {
+    background: linear-gradient(180deg, #7b4bbd, #4a2d74);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 16px 30px rgba(123, 75, 189, 0.22);
+}
+
+.elevator-cab.cab-ev-04 {
+    background: linear-gradient(180deg, #e8a54b, #c47f22);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 16px 30px rgba(232, 165, 75, 0.22);
+}
+
 .elevator-cab.open {
     outline: 3px solid rgba(193, 92, 47, 0.45);
 }
@@ -318,6 +338,34 @@ button:hover {
 .average-wait-row {
     grid-template-columns: 1fr auto;
     padding: 0.85rem 1rem;
+}
+
+.finished-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--warning);
+    color: white;
+    border-radius: 14px;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.finished-alert p {
+    margin: 0;
+    font-weight: 600;
+}
+
+.finished-alert button {
+    background: white;
+    color: var(--warning);
+    border: none;
+    white-space: nowrap;
+}
+
+.finished-alert button:hover {
+    background: var(--bg);
 }
 
 @media (max-width: 960px) {

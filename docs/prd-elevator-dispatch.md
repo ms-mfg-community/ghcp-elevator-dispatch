@@ -111,6 +111,24 @@ can extend in subsequent lab steps.
 - Outcome: Participant can inspect building state at a
   point in time.
 
+### Use Case 4: Max Ticks Reached and Restart
+
+- Actor: Participant
+- Trigger: Simulation reaches 1 000 ticks
+- Preconditions: Simulation is running
+- Main flow:
+  1. Tick counter reaches 1 000.
+  2. Simulation auto-pauses and sets `finished` to true.
+  3. Status message reads "Simulation complete —
+     maximum of 1 000 ticks reached."
+  4. UI shows an alert banner and a "Restart
+     simulation" button.
+  5. Participant clicks "Restart simulation".
+  6. All state resets to initial values; tick resumes
+     from 0.
+- Outcome: A fresh simulation begins with no leftover
+  passengers or elevator state.
+
 ## Functional Requirements
 
 | ID | Requirement | Priority | Notes |
@@ -133,6 +151,10 @@ can extend in subsequent lab steps.
 | FR-016 | The UI shall show floor-level metadata (waiting count, elevator status) beside each floor row. | Should | |
 | FR-017 | The simulation shall support pause and resume via POST `/api/control`. | Must | |
 | FR-018 | The UI shall show dotted gridlines on the shaft grid to delineate cells. | Should | |
+| FR-019 | The simulation shall stop after 1 000 ticks, auto-pause, set `finished` to true, and display a completion message. | Must | `MAX_TICKS = 1000` |
+| FR-020 | The UI shall show an alert banner and a "Restart simulation" button when the simulation finishes. | Must | |
+| FR-021 | POST `/api/restart` shall reset all simulation state to initial values and resume ticking from 0. | Must | |
+| FR-022 | Each elevator cab shall have a distinct color: ev-01 green, ev-02 blue, ev-03 purple, ev-04 light-orange. | Must | Applied via CSS class per cab |
 
 ## Non-Functional Requirements
 
@@ -147,7 +169,7 @@ can extend in subsequent lab steps.
 ## User Experience Requirements
 
 - Primary screens: Single-page dashboard at `/`.
-- Required states: connecting, running, paused.
+- Required states: connecting, running, paused, finished.
 - Content: Hero banner with tick and queued counts, origin/
   destination selectors, Add passenger and Pause buttons,
   live building view, movement summary row, average wait
@@ -191,10 +213,13 @@ can extend in subsequent lab steps.
   success, 400 on validation failure.
 - `POST /api/control` — Sets pause state
   (`{ paused: bool }`).
+- `POST /api/restart` — Resets all simulation state and
+  resumes ticking from 0. Returns the fresh snapshot.
 - `WS /ws` — Streams JSON building snapshots each tick.
 - Static assets mounted at `/static`.
-- Configuration: `tick_interval` and `spawn_chance` are
-  constructor parameters on `SimulationEngine`.
+- Configuration: `tick_interval`, `spawn_chance`, and
+  `max_ticks` are constructor parameters on
+  `SimulationEngine`.
 - No external services or databases.
 
 ## Technical Approach
@@ -308,6 +333,13 @@ Service a floor
 - [x] AC-008: Given the user clicks "Pause simulation",
   when the next tick fires, then the tick counter does not
   advance.
+- [x] AC-009: Given the simulation is running, when tick
+  reaches 1 000, then the simulation auto-pauses,
+  `finished` is true, and the status message says
+  "Simulation complete".
+- [x] AC-010: Given the simulation has finished, when the
+  user clicks "Restart simulation", then all state
+  resets and ticking resumes from 0.
 
 ## Testing Strategy
 

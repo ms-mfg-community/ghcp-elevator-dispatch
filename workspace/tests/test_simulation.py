@@ -81,6 +81,30 @@ class SpawnPassengerTests(unittest.TestCase):
         self.assertEqual(snapshot["average_passenger_wait_time_seconds"], 30.0)
         self.assertEqual(snapshot["wait_time_updated_tick"], 6)
 
+    def test_simulation_finishes_at_max_ticks(self) -> None:
+        engine = SimulationEngine(spawn_chance=0.0, max_ticks=5)
+        engine.building.tick = 4
+
+        engine.building.tick += 1
+        engine.dispatcher.dispatch_pending(engine.building)
+        for elevator in engine.building.elevators:
+            engine._advance_elevator(elevator)
+        engine._maybe_spawn_passenger()
+        engine._maybe_refresh_average_wait_time()
+
+        if engine.building.tick >= engine.max_ticks:
+            engine.building.paused = True
+            engine.building.finished = True
+            engine.building.status_message = (
+                f"Simulation complete \u2014 maximum of {engine.max_ticks:,} ticks reached."
+            )
+
+        snapshot = engine.building.snapshot()
+        self.assertTrue(snapshot["paused"])
+        self.assertTrue(snapshot["finished"])
+        self.assertIn("complete", str(snapshot["status_message"]))
+        self.assertEqual(snapshot["tick"], 5)
+
 
 if __name__ == "__main__":
     unittest.main()

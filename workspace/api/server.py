@@ -70,6 +70,11 @@ async def control_simulation(payload: ControlRequest) -> dict[str, object]:
     return await engine.set_paused(payload.paused)
 
 
+@app.post("/api/restart")
+async def restart_simulation() -> dict[str, object]:
+    return await engine.restart()
+
+
 @app.websocket("/ws")
 async def websocket_state(websocket: WebSocket) -> None:
     await websocket.accept()

@@ -23,6 +23,7 @@ type ElevatorState = {
 type Snapshot = {
     tick: number;
     paused: boolean;
+    finished: boolean;
     queued_requests: number;
     average_passenger_wait_time_seconds: number;
     wait_time_updated_tick: number;
@@ -147,7 +148,8 @@ function renderBuilding(snapshot: Snapshot): void {
         shaftTrack.style.gridRow = `1 / ${floorCount + 1}`;
 
         const cab = document.createElement("div");
-        cab.className = `elevator-cab ${elevator.door_state === "open" ? "open" : ""}`.trim();
+        const cabColorClass = `cab-${elevator.id}`;
+        cab.className = `elevator-cab ${cabColorClass} ${elevator.door_state === "open" ? "open" : ""}`.trim();
         cab.style.bottom = `calc(${elevator.current_floor - 1} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
         cab.innerHTML = `
       <div class="cab-header">
@@ -202,10 +204,43 @@ function renderSnapshot(snapshot: Snapshot): void {
     }
     if (pauseToggle) {
         pauseToggle.textContent = snapshot.paused ? "Resume simulation" : "Pause simulation";
+        pauseToggle.disabled = snapshot.finished;
     }
 
     renderBuilding(snapshot);
     renderMovementSummary(snapshot);
+    renderFinishedAlert(snapshot);
+}
+
+function renderFinishedAlert(snapshot: Snapshot): void {
+    let alert = document.querySelector<HTMLDivElement>("#finished-alert");
+    if (!snapshot.finished) {
+        alert?.remove();
+        return;
+    }
+    if (alert) {
+        return;
+    }
+    alert = document.createElement("div");
+    alert.id = "finished-alert";
+    alert.className = "finished-alert";
+    alert.innerHTML = `
+        <p>${snapshot.status_message}</p>
+        <button type="button" id="restart-button">Restart simulation</button>
+    `;
+    const buildingPanel = document.querySelector(".building-panel");
+    if (buildingPanel) {
+        buildingPanel.prepend(alert);
+    }
+    alert.querySelector("#restart-button")?.addEventListener("click", async () => {
+        try {
+            await postJson("/api/restart", {});
+        } catch (error) {
+            if (statusMessage) {
+                statusMessage.textContent = error instanceof Error ? error.message : "Failed to restart.";
+            }
+        }
+    });
 }
 
 async function postJson(url: string, payload: Record<string, unknown>): Promise<void> {

@@ -12,14 +12,16 @@ from simulation.passenger import Passenger
 # Probability that a new passenger appears on any given tick (0.0–1.0).
 DEFAULT_SPAWN_CHANCE = 0.3
 WAIT_TIME_UPDATE_SECONDS = 60.0
+MAX_TICKS = 1000
 
 
 class SimulationEngine:
-    def __init__(self, tick_interval: float = 1.0, spawn_chance: float = DEFAULT_SPAWN_CHANCE) -> None:
+    def __init__(self, tick_interval: float = 1.0, spawn_chance: float = DEFAULT_SPAWN_CHANCE, max_ticks: int = MAX_TICKS) -> None:
         self.building = Building()
         self.dispatcher = Dispatcher()
         self.tick_interval = tick_interval
         self.spawn_chance = spawn_chance
+        self.max_ticks = max_ticks
         self._lock = asyncio.Lock()
         self._listeners: set[asyncio.Queue[dict[str, object]]] = set()
         self._running = True
@@ -65,6 +67,13 @@ class SimulationEngine:
         await self.publish(snapshot)
         return snapshot
 
+    async def restart(self) -> dict[str, object]:
+        async with self._lock:
+            self.building = Building()
+            snapshot = self.building.snapshot()
+        await self.publish(snapshot)
+        return snapshot
+
     async def tick(self) -> None:
         async with self._lock:
             if self.building.paused:
@@ -77,6 +86,13 @@ class SimulationEngine:
 
                 self._maybe_spawn_passenger()
                 self._maybe_refresh_average_wait_time()
+
+                if self.building.tick >= self.max_ticks:
+                    self.building.paused = True
+                    self.building.finished = True
+                    self.building.status_message = (
+                        f"Simulation complete \u2014 maximum of {self.max_ticks:,} ticks reached."
+                    )
 
                 snapshot = self.building.snapshot()
 
