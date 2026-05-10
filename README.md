@@ -1,6 +1,7 @@
-# elevator-dispatch
+# Elevator Dispatch Workshop
 
-Azure-hosted AI-enabled elevator dispatch sample built for Azure Functions.
+A GitHub Copilot workshop project that simulates a 5-floor,
+4-elevator dispatch system with a real-time web dashboard.
 
 ## Lab tasks
 
@@ -10,72 +11,59 @@ Azure-hosted AI-enabled elevator dispatch sample built for Azure Functions.
 
 ## What it does
 
-This project exposes a `POST /api/dispatch` Azure Function that:
+The application under `workspace/` runs an in-memory elevator
+simulation driven by a simple dispatcher heuristic. A FastAPI
+backend exposes REST endpoints and a WebSocket feed, and an
+HTML/CSS/JS dashboard renders the live building view with
+animated elevator cabs and passenger dots.
 
-- scores a bank of elevators against a hall call
-- predicts short-term traffic hotspots from time-of-day and recent demand
-- surfaces an AI insight summary
-- lets you change the Azure OpenAI model with configuration instead of code edits
+## Project layout
 
-## Configuration
+```text
+workspace/
+├── api/            # FastAPI routes, WebSocket, Pydantic models
+├── simulation/     # Domain model: building, elevators,
+│                   # passengers, dispatcher, engine
+├── tests/          # unittest-based test suite
+└── ui/             # HTML template, TypeScript source, served static assets
+```
 
-Set these environment variables when deploying to Azure:
+## Getting started
 
-- `AZURE_OPENAI_MODEL` - model name to report and use for Azure OpenAI requests (default: `gpt-4.1-mini`)
-- `AZURE_OPENAI_ENDPOINT` - optional Azure OpenAI endpoint
-- `AZURE_OPENAI_API_KEY` - optional Azure OpenAI API key
-- `AZURE_OPENAI_DEPLOYMENT` - optional Azure OpenAI deployment name
-- `AZURE_OPENAI_API_VERSION` - optional API version override
+All commands run from the `workspace/` directory.
 
-If Azure OpenAI credentials are not provided, the app still returns a dispatch decision and a heuristic AI summary.
-
-## Local development
-
-Install dependencies:
+Install Python dependencies:
 
 ```bash
-python -m pip install -r /home/runner/work/elevator-dispatch/elevator-dispatch/requirements.txt
+cd workspace
+python -m pip install -r requirements.txt
 ```
 
-Run tests:
+Start the app:
 
 ```bash
-cd /home/runner/work/elevator-dispatch/elevator-dispatch && python -m unittest tests/test_dispatch.py -v
+python -m uvicorn api.server:app --reload
 ```
 
-Example payload:
+Open <http://127.0.0.1:8000> to view the dashboard.
 
-```json
-{
-  "request_time": "2026-04-20T08:55:00",
-  "request": {
-    "origin_floor": 1,
-    "destination_floor": 14,
-    "passengers": 3
-  },
-  "elevators": [
-    {
-      "id": "A",
-      "current_floor": 1,
-      "direction": "idle",
-      "capacity": 12,
-      "load": 0,
-      "queued_stops": []
-    },
-    {
-      "id": "B",
-      "current_floor": 9,
-      "direction": "down",
-      "capacity": 12,
-      "load": 8,
-      "queued_stops": [7, 4]
-    }
-  ],
-  "recent_calls": [
-    {"origin_floor": 1, "destination_floor": 8},
-    {"origin_floor": 1, "destination_floor": 16}
-  ]
-}
+## Validation
+
+```bash
+python -m compileall .
+python -m unittest discover -s tests -v
 ```
 
-The response includes the assigned elevator, ranked alternatives, demand forecast, AI insight, and the active model setting.
+For UI TypeScript changes:
+
+```bash
+npm install
+npm run build
+```
+
+## Contributing
+
+Custom Copilot prompts live in `.github/prompts/`.
+Repository-level Copilot instructions are in
+`.github/copilot-instructions.md`. Follow those conventions
+when extending the project through new lab steps.
