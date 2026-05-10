@@ -60,6 +60,27 @@ class SpawnPassengerTests(unittest.TestCase):
         self.assertEqual(elevator.passengers_moved, 1)
         self.assertEqual(engine.building.snapshot()["elevators"][0]["passengers_moved"], 1)
 
+    def test_average_wait_time_refreshes_every_sixty_seconds(self) -> None:
+        engine = SimulationEngine(tick_interval=10.0, spawn_chance=0.0)
+        elevator = engine.building.elevators[0]
+        passenger = Passenger(origin_floor=3, destination_floor=5, requested_tick=1)
+        engine.building.tick = 4
+        engine.building.add_passenger(passenger)
+        elevator.current_floor = 3
+        elevator.add_stop(3)
+
+        engine._advance_elevator(elevator)
+        engine._maybe_refresh_average_wait_time()
+
+        self.assertEqual(engine.building.average_passenger_wait_time_seconds, 0.0)
+
+        engine.building.tick = 6
+        engine._maybe_refresh_average_wait_time()
+
+        snapshot = engine.building.snapshot()
+        self.assertEqual(snapshot["average_passenger_wait_time_seconds"], 30.0)
+        self.assertEqual(snapshot["wait_time_updated_tick"], 6)
+
 
 if __name__ == "__main__":
     unittest.main()

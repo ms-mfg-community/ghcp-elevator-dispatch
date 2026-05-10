@@ -117,6 +117,7 @@ function renderMovementSummary(snapshot) {
         return;
     }
     const totalMoved = snapshot.elevators.reduce((total, elevator) => total + elevator.passengers_moved, 0);
+    const averageWaitTime = snapshot.average_passenger_wait_time_seconds.toFixed(1);
     const cabTotals = snapshot.elevators
         .map((elevator) => `
             <div class="movement-stat">
@@ -130,6 +131,10 @@ function renderMovementSummary(snapshot) {
         <div class="movement-row total-movement-row">
             <span>Total passengers moved</span>
             <strong>${totalMoved}</strong>
+        </div>
+        <div class="movement-row average-wait-row">
+            <span>Average passenger wait time</span>
+            <strong>${averageWaitTime} sec</strong>
         </div>
     `;
 }

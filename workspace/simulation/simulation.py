@@ -11,6 +11,7 @@ from simulation.passenger import Passenger
 
 # Probability that a new passenger appears on any given tick (0.0–1.0).
 DEFAULT_SPAWN_CHANCE = 0.3
+WAIT_TIME_UPDATE_SECONDS = 60.0
 
 
 class SimulationEngine:
@@ -44,8 +45,12 @@ class SimulationEngine:
             return self.building.snapshot()
 
     async def add_passenger(self, origin_floor: int, destination_floor: int) -> dict[str, object]:
-        passenger = Passenger(origin_floor=origin_floor, destination_floor=destination_floor)
         async with self._lock:
+            passenger = Passenger(
+                origin_floor=origin_floor,
+                destination_floor=destination_floor,
+                requested_tick=self.building.tick,
+            )
             self.building.add_passenger(passenger)
             self.dispatcher.assign_passenger(self.building, passenger)
             snapshot = self.building.snapshot()
@@ -71,6 +76,7 @@ class SimulationEngine:
                     self._advance_elevator(elevator)
 
                 self._maybe_spawn_passenger()
+                self._maybe_refresh_average_wait_time()
 
                 snapshot = self.building.snapshot()
 
@@ -123,6 +129,7 @@ class SimulationEngine:
         elevator.passengers_moved += len(exiting)
         waiting = self.building.waiting_passengers[elevator.current_floor]
         boarded, remaining = elevator.board_passengers(waiting)
+        self.building.record_boarding_wait(boarded, self.tick_interval)
         self.building.waiting_passengers[elevator.current_floor] = remaining
 
         elevator.remove_stop(elevator.current_floor)
@@ -145,6 +152,11 @@ class SimulationEngine:
         destination = random.choice(
             [f for f in range(1, floor_count + 1) if f != origin]
         )
-        passenger = Passenger(origin_floor=origin, destination_floor=destination)
+        passenger = Passenger(origin_floor=origin, destination_floor=destination, requested_tick=self.building.tick)
         self.building.add_passenger(passenger)
         self.dispatcher.assign_passenger(self.building, passenger)
+
+    def _maybe_refresh_average_wait_time(self) -> None:
+        update_ticks = max(1, round(WAIT_TIME_UPDATE_SECONDS / self.tick_interval))
+        if self.building.tick - self.building.wait_time_updated_tick >= update_ticks:
+            self.building.refresh_average_wait_time()

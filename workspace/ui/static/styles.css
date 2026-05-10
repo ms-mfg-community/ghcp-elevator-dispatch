@@ -286,7 +286,8 @@ button:hover {
 }
 
 .movement-stat,
-.total-movement-row {
+.total-movement-row,
+.average-wait-row {
     align-items: center;
     border: 1px solid var(--line);
     background: rgba(255, 255, 255, 0.52);
@@ -300,18 +301,21 @@ button:hover {
 }
 
 .movement-stat span,
-.total-movement-row span {
+.total-movement-row span,
+.average-wait-row span {
     color: rgba(27, 36, 48, 0.72);
     font-size: 0.9rem;
     font-weight: 700;
 }
 
 .movement-stat strong,
-.total-movement-row strong {
+.total-movement-row strong,
+.average-wait-row strong {
     font-size: 1.35rem;
 }
 
-.total-movement-row {
+.total-movement-row,
+.average-wait-row {
     grid-template-columns: 1fr auto;
     padding: 0.85rem 1rem;
 }

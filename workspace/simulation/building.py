@@ -24,6 +24,10 @@ class Building:
     tick: int = 0
     paused: bool = False
     status_message: str = "Simulation ready. Add a passenger to begin."
+    total_passenger_wait_time_seconds: float = 0.0
+    boarded_passenger_count: int = 0
+    average_passenger_wait_time_seconds: float = 0.0
+    wait_time_updated_tick: int = 0
 
     def __post_init__(self) -> None:
         for floor in range(1, self.floor_count + 1):
@@ -38,6 +42,21 @@ class Building:
 
     def resolve_pending(self, passenger_id: str) -> None:
         self.pending_passengers = [passenger for passenger in self.pending_passengers if passenger.id != passenger_id]
+
+    def record_boarding_wait(self, passengers: list[Passenger], tick_interval: float) -> None:
+        for passenger in passengers:
+            waited_ticks = max(0, self.tick - passenger.requested_tick)
+            self.total_passenger_wait_time_seconds += waited_ticks * tick_interval
+            self.boarded_passenger_count += 1
+
+    def refresh_average_wait_time(self) -> None:
+        if self.boarded_passenger_count == 0:
+            self.average_passenger_wait_time_seconds = 0.0
+        else:
+            self.average_passenger_wait_time_seconds = (
+                self.total_passenger_wait_time_seconds / self.boarded_passenger_count
+            )
+        self.wait_time_updated_tick = self.tick
 
     def floor_snapshot(self) -> list[dict[str, object]]:
         return [
@@ -54,6 +73,8 @@ class Building:
             "paused": self.paused,
             "status_message": self.status_message,
             "queued_requests": len(self.pending_passengers),
+            "average_passenger_wait_time_seconds": self.average_passenger_wait_time_seconds,
+            "wait_time_updated_tick": self.wait_time_updated_tick,
             "floors": self.floor_snapshot(),
             "elevators": [elevator.to_dict() for elevator in self.elevators],
         }

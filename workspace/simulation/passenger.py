@@ -11,6 +11,7 @@ _PASSENGER_COUNTER = count(1)
 class Passenger:
     origin_floor: int
     destination_floor: int
+    requested_tick: int = 0
     id: str = field(default_factory=lambda: f"psg-{next(_PASSENGER_COUNTER):04d}")
 
     def __post_init__(self) -> None:
@@ -29,5 +30,6 @@ class Passenger:
             "id": self.id,
             "origin_floor": self.origin_floor,
             "destination_floor": self.destination_floor,
+            "requested_tick": self.requested_tick,
             "direction": self.direction,
         }

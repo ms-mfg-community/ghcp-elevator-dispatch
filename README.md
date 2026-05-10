@@ -17,7 +17,7 @@ animated elevator cabs and passenger dots.
 
 Use this screenshot as the target state for the live dashboard layout.
 
-![Dashboard target state](workspace/images/live-dashboard-target-state.png)
+![Dashboard target state](docs/images/live-dashboard-target-state.png)
 
 ## Project layout
 
