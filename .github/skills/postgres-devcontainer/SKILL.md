@@ -59,7 +59,8 @@ Include VS Code extensions in `customizations.vscode.extensions`:
 
 ### 2. Create `docker-compose.yml`
 
-Define two services:
+Use [`assets/docker-compose.yml`](./assets/docker-compose.yml)
+as the starting template. It defines two services:
 
 **`app`** — the dev container:
 
@@ -82,7 +83,9 @@ Add a `volumes:` section for the named data volume.
 
 ### 3. Create Init SQL Script
 
-Place SQL files in `.devcontainer/postgres-init/`.
+Use [`assets/001-schema.sql`](./assets/001-schema.sql)
+as the starting template. Place SQL files in
+`.devcontainer/postgres-init/`.
 Postgres runs files in `/docker-entrypoint-initdb.d/`
 alphabetically on first volume creation only.
 
@@ -126,22 +129,9 @@ For FastAPI projects, use:
 | `sqlalchemy[asyncio]` | Async ORM / Core with connection pooling |
 
 Create the async engine only when `DATABASE_URL` is
-present:
-
-```python
-import os
-from sqlalchemy.ext.asyncio import create_async_engine
-
-DATABASE_URL = os.environ.get("DATABASE_URL")
-engine = (
-    create_async_engine(
-        DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
-        echo=False,
-    )
-    if DATABASE_URL
-    else None
-)
-```
+present. See
+[`scripts/create_engine.py`](./scripts/create_engine.py)
+for the reference implementation.
 
 ## Validation Checklist
 
@@ -157,6 +147,7 @@ engine = (
 
 ## Reference
 
+- [Postgres Docker & SQLAlchemy async patterns](./references/postgres-sqlalchemy.md)
 - [Dev Containers specification](https://containers.dev/implementors/json_reference/)
 - [Postgres Docker image docs](https://hub.docker.com/_/postgres)
 - [SQLAlchemy async engine](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html)
