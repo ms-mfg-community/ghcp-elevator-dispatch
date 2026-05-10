@@ -8,6 +8,7 @@ const form = document.querySelector("#passenger-form");
 const originSelect = document.querySelector("#origin-floor");
 const destinationSelect = document.querySelector("#destination-floor");
 const pauseToggle = document.querySelector("#pause-toggle");
+const restartToggle = document.querySelector("#restart-toggle");
 function populateFloorOptions() {
     if (!originSelect || !destinationSelect) {
         return;
@@ -237,6 +238,16 @@ function bindControls() {
         catch (error) {
             if (statusMessage) {
                 statusMessage.textContent = error instanceof Error ? error.message : "Failed to change simulation state.";
+            }
+        }
+    });
+    restartToggle?.addEventListener("click", async () => {
+        try {
+            await postJson("/api/restart", {});
+        }
+        catch (error) {
+            if (statusMessage) {
+                statusMessage.textContent = error instanceof Error ? error.message : "Failed to restart.";
             }
         }
     });

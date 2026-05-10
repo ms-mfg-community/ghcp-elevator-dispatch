@@ -154,7 +154,7 @@ can extend in subsequent lab steps.
 | FR-019 | The simulation shall stop after 1 000 ticks, auto-pause, set `finished` to true, and display a completion message. | Must | `MAX_TICKS = 1000` |
 | FR-020 | The UI shall show an alert banner and a "Restart simulation" button when the simulation finishes. | Must | |
 | FR-021 | POST `/api/restart` shall reset all simulation state to initial values and resume ticking from 0. | Must | |
-| FR-022 | Each elevator cab shall have a distinct color: ev-01 green, ev-02 blue, ev-03 purple, ev-04 light-orange. | Must | Applied via CSS class per cab |
+| FR-022 | Each elevator cab shall have a distinct color: ev-01 green, ev-02 blue, ev-03 purple, ev-04 medium grey. | Must | Applied via CSS class per cab |
 
 ## Non-Functional Requirements
 
