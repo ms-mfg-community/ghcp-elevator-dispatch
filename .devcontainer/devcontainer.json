@@ -16,11 +16,6 @@
             "label": "Postgres"
         }
     },
-    "features": {
-        "ghcr.io/devcontainers/features/sshd:1": {
-            "version": "latest"
-        }
-    },
     "postCreateCommand": "cd workspace && python -m venv .venv && . .venv/bin/activate && python -m pip install -r requirements.txt && npm install",
     "customizations": {
         "vscode": {

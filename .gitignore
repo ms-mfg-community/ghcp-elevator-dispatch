@@ -26,3 +26,6 @@ replay_pid*
 # Python cache files
 __pycache__/
 *.py[cod]
+
+# Local Python virtual environment
+workspace/.venv/
