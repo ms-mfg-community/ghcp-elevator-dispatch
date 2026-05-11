@@ -24,21 +24,44 @@
         "ghcr.io/devcontainers/features/github-cli:1": {
             "version": "latest"
         },
+        "ghcr.io/devcontainers/features/powershell:2": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/azure-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/azure/azure-dev/azd:0": {},
+        "ghcr.io/devcontainers/features/terraform:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "lts"
+        },
         "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
-            "packages": "postgresql-client"
+            "packages": "postgresql-client,jq,less"
         },
         "ghcr.io/devcontainers/features/sshd:1": {
             "version": "latest"
         }
     },
-    "postCreateCommand": "cd workspace && python -m venv .venv && . .venv/bin/activate && python -m pip install -r requirements.txt && npm install",
+    "postCreateCommand": "cd workspace && python -m venv .venv && . .venv/bin/activate && python -m pip install -r requirements.txt && npm install && az bicep install && sudo npm install -g @modelcontextprotocol/inspector",
     "customizations": {
         "vscode": {
             "extensions": [
                 "ms-python.python",
                 "ms-azuretools.vscode-docker",
+                "ms-azuretools.vscode-containers",
+                "ms-azuretools.vscode-azureresourcegroups",
+                "ms-azuretools.vscode-azureappservice",
+                "ms-azuretools.vscode-azurefunctions",
+                "ms-azuretools.vscode-azure-github-copilot",
+                "ms-azuretools.vscode-bicep",
+                "HashiCorp.terraform",
+                "ckolkman.vscode-postgres",
                 "GitHub.copilot",
-                "GitHub.copilot-chat"
+                "GitHub.copilot-chat",
+                "GitHub.vscode-pull-request-github",
+                "GitHub.vscode-github-actions"
             ]
         }
     }

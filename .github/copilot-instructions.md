@@ -286,3 +286,5 @@ python -m uvicorn api.server:app --reload --port 7000
 - Do not rewrite unrelated generated files or prompt files.
 - Do not modify files under `completed/` unless the user explicitly asks.
 - Preserve existing user or formatter edits when updating files.
+- For Markdown prompts, PRDs, and documentation prose, prefer a wider wrap around 110 to 120 columns so text uses the editor width;
+	avoid narrow CRLF-style wrapping unless matching an existing table, code block, or template section.
