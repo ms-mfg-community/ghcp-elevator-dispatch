@@ -66,10 +66,10 @@ python -m pip install -r requirements.txt
 Start the app:
 
 ```bash
-python -m uvicorn api.server:app --reload --port 8080
+python -m uvicorn api.server:app --reload --port 7000
 ```
 
-Open <http://127.0.0.1:8080> to view the dashboard.
+Open <http://127.0.0.1:7000> to view the dashboard.
 
 ## Validation
 

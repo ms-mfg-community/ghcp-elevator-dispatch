@@ -30,10 +30,10 @@ python -m pip install -r requirements.txt
 Start the app from the `workspace` directory:
 
 ```bash
-python -m uvicorn api.server:app --reload
+python -m uvicorn api.server:app --reload --port 7000
 ```
 
-Open <http://127.0.0.1:8000> to view the dashboard.
+Open <http://127.0.0.1:7000> to view the dashboard.
 
 Run tests:
 

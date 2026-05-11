@@ -71,12 +71,12 @@ can extend in subsequent lab steps.
 - Trigger: Starts the FastAPI server
 - Preconditions: Python venv created, dependencies installed
 - Main flow:
-  1. Activate `.venv` and run `uvicorn api.server:app`.
-  2. Open `http://localhost:8000` in a browser.
+  1. Activate `.venv` and run `uvicorn api.server:app --port 7000`.
+  2. Open `http://localhost:7000` in a browser.
   3. Observe elevators moving, passengers spawning, and
      the dashboard updating in real time.
 - Alternate or error flows:
-  - Port 8000 in use: uvicorn reports a bind error;
+  - Port 7000 in use: uvicorn reports a bind error;
     participant picks another port with `--port`.
 - Outcome: Live dashboard renders the building view with
   elevator cabs, passenger dots, and status indicators.

@@ -34,11 +34,31 @@ description: >-
 
 ## Procedure
 
+> **Idempotent by default.** Before creating any file,
+> check whether it already exists. If it does, merge the
+> required keys or sections into the existing content
+> rather than overwriting. Specifically:
+>
+> - **JSON files** (`devcontainer.json`): read the
+>   existing object, add missing keys, append to arrays
+>   (e.g. `forwardPorts`, `extensions`) without
+>   duplicating values, and preserve any user-added
+>   fields.
+> - **YAML files** (`docker-compose.yml`): add missing
+>   services and volumes; do not remove or rewrite
+>   existing service definitions.
+> - **SQL files** (`001-schema.sql`): append new
+>   `CREATE TABLE IF NOT EXISTS` statements. Never drop
+>   or recreate existing tables.
+
 ### 1. Create `devcontainer.json`
 
+Use [`assets/devcontainer.json`](./assets/devcontainer.json)
+as the starting template.
+
 Use `dockerComposeFile` to reference a Compose file.
-Set `service` to the app container name. Forward the
-app port and 5432 for Postgres.
+Set `service` to the app container name. Forward
+`7000` (app) and `5432` (Postgres).
 
 Key fields:
 
@@ -47,7 +67,7 @@ Key fields:
 | `dockerComposeFile` | `docker-compose.yml` |
 | `service` | `app` |
 | `workspaceFolder` | `/workspaces/${localWorkspaceFolderBasename}` |
-| `forwardPorts` | App port and `5432` |
+| `forwardPorts` | `7000` and `5432` |
 | `postCreateCommand` | Venv setup, pip install, npm install |
 
 Include VS Code extensions in `customizations.vscode.extensions`:

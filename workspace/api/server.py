@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from api.database import create_database_engine, dispose_database_engine
 from simulation.simulation import SimulationEngine
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,12 +27,15 @@ class ControlRequest(BaseModel):
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(application: FastAPI):
+    database_engine = create_database_engine()
+    application.state.database_engine = database_engine
     task = asyncio.create_task(engine.run())
     try:
         yield
     finally:
         await engine.shutdown()
+        await dispose_database_engine(database_engine)
         task.cancel()
         with suppress(asyncio.CancelledError):
             await task

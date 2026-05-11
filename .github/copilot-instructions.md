@@ -277,7 +277,7 @@ npm run build
 To run the app locally:
 
 ```bash
-python -m uvicorn api.server:app --reload
+python -m uvicorn api.server:app --reload --port 7000
 ```
 
 ## Change Discipline
