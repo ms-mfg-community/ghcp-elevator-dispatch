@@ -16,6 +16,21 @@
             "label": "Postgres"
         }
     },
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "moby": false,
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
+            "packages": "postgresql-client"
+        },
+        "ghcr.io/devcontainers/features/sshd:1": {
+            "version": "latest"
+        }
+    },
     "postCreateCommand": "cd workspace && python -m venv .venv && . .venv/bin/activate && python -m pip install -r requirements.txt && npm install",
     "customizations": {
         "vscode": {

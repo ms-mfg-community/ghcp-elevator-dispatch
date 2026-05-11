@@ -28,4 +28,5 @@ __pycache__/
 *.py[cod]
 
 # Local Python virtual environment
+.venv/
 workspace/.venv/

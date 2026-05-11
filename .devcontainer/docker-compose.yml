@@ -4,6 +4,7 @@ services:
     volumes:
       - ..:/workspaces/${localWorkspaceFolderBasename}:cached
     command: sleep infinity
+    privileged: true
     depends_on:
       - postgres
     environment:
