@@ -7,17 +7,19 @@
 - Stakeholders: Workshop participants, facilitator
 - Status: Approved
 - Created: 2026-05-09
-- Last updated: 2026-05-09
-- Target release or lab milestone: Lab 01 – Initialize Project
+- Last updated: 2026-05-11
+- Target release or lab milestone: Lab 01 - Initialize Project; Labs 02-04 - Devcontainer and Copilot assets
 
 ## Summary
 
-Build an in-memory elevator dispatch simulation for a
-5-floor, 4-elevator building, exposed through a FastAPI
-backend and visualized in a real-time browser dashboard.
-The project serves as a hands-on workshop starter that
-teaches modular Python design, state management, async
-WebSocket communication, and simple scheduling heuristics.
+Build an in-memory elevator dispatch simulation for a 5-floor, 4-elevator building, exposed through a FastAPI backend
+and visualized in a real-time browser dashboard. The project serves as a hands-on workshop starter that teaches modular
+Python design, state management, async WebSocket communication, simple scheduling heuristics, and Copilot-assisted
+engineering workflows.
+
+The repository should also function as a workshop lab environment. Participants need a clear setup path, prerequisite
+checklist, repeatable validation commands, and discoverable Copilot customizations for prompts, skills, agents, and
+path-specific instructions.
 
 ## Dashboard Target State
 
@@ -25,6 +27,48 @@ The screenshot below shows the desired state of the live
 dashboard after Lab 01 is complete.
 
 ![Dashboard target state](images/live-dashboard-target-state.png)
+
+## Workshop Setup and Prerequisites
+
+### Must-Have Now
+
+| Requirement | Notes |
+| --- | --- |
+| GitHub account | Required to fork, clone, or open the assigned workshop repository. |
+| GitHub Copilot access | Required for Copilot Chat, agent mode, prompt files, and skill-driven workflows. |
+| VS Code | Primary workshop editor with GitHub Copilot and Copilot Chat extensions enabled. |
+| Git | Required for local clone, branch, commit, and pull request workflows. |
+
+### Supported Setup Paths
+
+| Path | Target User | Required Runtime |
+| --- | --- | --- |
+| GitHub Codespaces | Workshop participants who need the fastest setup | Repository devcontainer builds the runtime and tools. |
+| VS Code Dev Containers | Participants using local containers | Docker Desktop or compatible container engine plus Dev Containers extension. |
+| Manual setup | Participants who cannot use containers | Python 3.10+, Node.js LTS, npm, Git, and optional PostgreSQL client. |
+
+### Permissions and Policy Requirements
+
+- Most labs require repository write access and any active Copilot license.
+- Labs that use GitHub Actions, Copilot coding agent, organization-managed Copilot settings, or cloud deployment tooling
+  may require additional organization permissions.
+- Participants in managed enterprise environments should confirm that Codespaces, Copilot agent mode, MCP servers,
+  GitHub Actions, and required marketplace extensions are allowed before the workshop.
+
+### Pre-Configured Developer Tooling
+
+The preferred Codespaces path should provide these tools through `.devcontainer/devcontainer.json` and
+`.devcontainer/docker-compose.yml`:
+
+| Tooling Area | Expected Capability |
+| --- | --- |
+| Python | Python 3.10+ runtime, `.venv` under `workspace/`, FastAPI dependencies installed. |
+| TypeScript | Node.js LTS, npm, TypeScript compiler, `npm run build`. |
+| GitHub | GitHub CLI, Copilot extensions, pull request and GitHub Actions extensions. |
+| Containers | Docker-in-Docker with Debian trixie-compatible `"moby": false` configuration. |
+| Database | PostgreSQL 16 sidecar, `DATABASE_URL`, init SQL, and `psql` client. |
+| Cloud/IaC | Azure CLI, Azure Developer CLI (`azd`), Terraform, Bicep support. |
+| Agent tooling | MCP Inspector support and repository-local Copilot prompts, skills, instructions, and agents. |
 
 ## Problem Statement
 
@@ -38,23 +82,26 @@ can extend in subsequent lab steps.
 
 ## Goals
 
-- Provide a running 5-floor, 4-elevator simulation out of
-  the box after a single setup command.
+- Provide a running 5-floor, 4-elevator simulation out of the box through Codespaces or a documented local setup path.
 - Render a live building view with animated elevator cabs,
   passenger dots, floor-level metadata, per-cab movement
   totals, and average passenger wait time.
 - Keep the codebase small, readable, and easy to extend in
   a workshop setting.
-- Demonstrate async Python, WebSocket streaming, and
-  vanilla HTML/CSS/TypeScript without frameworks.
+- Demonstrate async Python, WebSocket streaming, and vanilla HTML/CSS/TypeScript without frameworks.
+- Provide workshop-grade setup documentation, validation commands, and troubleshooting guidance modeled on a hands-on
+  lab experience.
+- Include reusable Copilot assets that demonstrate prompts, skills, instructions, agents, and repeatable verification
+  workflows.
 
 ## Non-Goals
 
-- Database or persistent storage integration.
+- Making database persistence required for the core simulation.
 - Authentication or authorization.
 - ML-based or optimization-library dispatch algorithms.
 - Mobile-native or framework-based (React, Vue) UI.
 - Multi-building or multi-tenant support.
+- Production cloud deployment, secret management, or enterprise identity integration.
 
 ## Users and Personas
 
@@ -155,6 +202,9 @@ can extend in subsequent lab steps.
 | FR-020 | The UI shall show an alert banner and a "Restart simulation" button when the simulation finishes. | Must | |
 | FR-021 | POST `/api/restart` shall reset all simulation state to initial values and resume ticking from 0. | Must | |
 | FR-022 | Each elevator cab shall have a distinct color: ev-01 green, ev-02 blue, ev-03 purple, ev-04 medium grey. | Must | Applied via CSS class per cab |
+| FR-023 | The repository README shall provide tutorial-style setup paths, prerequisites, validation commands, repository tour, and troubleshooting. | Must | Modeled on hands-on lab structure |
+| FR-024 | The repository shall include reusable Copilot prompts and skills for repeatable lab operations. | Should | Prompt and skill files under `.github/` |
+| FR-025 | The devcontainer shall provide optional PostgreSQL schema inspection support without making persistence mandatory. | Should | PostgreSQL sidecar, init SQL, and psql script |
 
 ## Non-Functional Requirements
 
@@ -165,6 +215,8 @@ can extend in subsequent lab steps.
 | NFR-003 | Maintainability | Modules stay under 200 lines each. | All current modules comply |
 | NFR-004 | Accessibility | Floor labels and elevator IDs use semantic HTML text. | Screen-reader friendly labels |
 | NFR-005 | Portability | Runs on Python 3.10+ with no OS-specific dependencies. | Windows, macOS, Linux |
+| NFR-006 | Onboarding | New participants can select a setup path and validate the environment from README instructions. | 15 minutes or less for Codespaces |
+| NFR-007 | Workshop repeatability | Setup and validation commands are scriptable and documented. | Commands work in Codespaces and devcontainer paths |
 
 ## User Experience Requirements
 
@@ -179,10 +231,14 @@ can extend in subsequent lab steps.
   decorative passenger dots.
 - Responsive: Fluid layout with `clamp()` typography; no
   fixed-width breakpoints.
+- Documentation surfaces: Repository README for workshop onboarding, `workspace/README.md` for app-level commands,
+  PRDs for product intent, and `.github/` customizations for Copilot-driven workflows.
+- Setup states: Fresh Codespace, rebuilt devcontainer, manual local environment, database sidecar reachable, and database
+  sidecar unavailable but app still runs in memory.
 
 ## Data Requirements
 
-- Entities: `Building`, `Elevator`, `Passenger`.
+- Entities: `Building`, `Elevator`, `Passenger`; optional PostgreSQL tables for future persistence labs.
 - Required fields:
   - Passenger: `id`, `origin_floor`, `destination_floor`,
     `requested_tick`, `direction` (derived).
@@ -197,11 +253,15 @@ can extend in subsequent lab steps.
     `boarded_passenger_count`,
     `average_passenger_wait_time_seconds`,
     `wait_time_updated_tick`.
-- Data lifecycle: All state is in-memory; resets on server
-  restart.
+- Data lifecycle: Core simulation state is in-memory and resets on server restart. PostgreSQL schema objects may exist in
+  the devcontainer for future persistence labs, but the current app must not depend on stored rows.
 - Validation: Floor numbers 1–5, origin ≠ destination.
 - Seed data: Elevators start at floors 1–4. No passengers
   at boot.
+- Optional PostgreSQL tables:
+  - `simulation_runs`: run-level metadata for future persistence.
+  - `passenger_events`: passenger lifecycle events for future analytics.
+  - `scenarios`: named scenario rows for future replay labs.
 - Privacy: No PII collected.
 
 ## API and Integration Requirements
@@ -220,15 +280,20 @@ can extend in subsequent lab steps.
 - Configuration: `tick_interval`, `spawn_chance`, and
   `max_ticks` are constructor parameters on
   `SimulationEngine`.
-- No external services or databases.
+- Optional devcontainer PostgreSQL sidecar for future persistence and schema inspection labs. The app must still run when
+  `DATABASE_URL` is absent.
+- Development tooling integrations: GitHub Copilot, GitHub CLI, Docker-in-Docker, PostgreSQL client, Azure CLI, azd,
+  Terraform, Bicep, and MCP Inspector are supported by the Codespaces/devcontainer path.
 
 ## Technical Approach
 
-Keep simulation logic in `workspace/simulation/`, API logic
-in `workspace/api/`, UI files in `workspace/ui/`, and tests
-in `workspace/tests/`. All state lives in memory inside a
-single `SimulationEngine` instance protected by an asyncio
-lock.
+Keep simulation logic in `workspace/simulation/`, API logic in `workspace/api/`, UI files in `workspace/ui/`, and tests in
+`workspace/tests/`. All core runtime state lives in memory inside a single `SimulationEngine` instance protected by an
+asyncio lock.
+
+The repository should remain workshop-first: small modules, explicit state transitions, and simple setup instructions.
+The devcontainer may include optional services and tools that support later labs, but those services must not obscure the
+starter app or make the baseline simulation harder to run.
 
 ### Proposed Components
 
@@ -242,6 +307,9 @@ lock.
 | FastAPI server | Routes, validation, WebSocket, static mount | `api/server.py` |
 | Dashboard UI | HTML template, TypeScript source, CSS, served JS | `ui/` |
 | Tests | unittest suite for spawn, dispatch, metrics | `tests/` |
+| Devcontainer | Codespaces runtime, tooling features, app/Postgres Compose services | `.devcontainer/` |
+| Copilot customizations | Repository instructions, path instructions, prompts, skills, agents | `.github/` |
+| Documentation | Tutorial README, app quickstart, product requirements | `README.md`, `workspace/README.md`, `docs/` |
 
 ### Data Model
 
@@ -346,8 +414,8 @@ Service a floor
 - Unit tests: Passenger spawn probability, dispatcher
   assignment and queuing, `passengers_moved` counter,
   average wait time refresh timing.
-- Integration tests: Not required for Lab 01 (in-memory
-  only).
+- Integration tests: Not required for Lab 01 core behavior. Devcontainer/database labs should validate PostgreSQL
+  connectivity and schema inspection separately from simulation unit tests.
 - Manual validation:
 
   ```bash
@@ -356,7 +424,14 @@ Service a floor
   pip install -r requirements.txt
   python -m compileall api simulation tests
   python -m unittest discover -s tests -v
+  npm run build
   python -m uvicorn api.server:app --reload
+  ```
+
+  From the repository root, inspect the optional PostgreSQL schema:
+
+  ```bash
+  .github/skills/postgres-schema-inspection/scripts/inspect-postgres-schema.sh
   ```
 
 - Test data: Inline fixtures in test methods.
@@ -366,11 +441,12 @@ Service a floor
 
 ## Dependencies
 
-- Internal: `simulation/`, `api/`, `ui/`, `tests/`.
+- Internal: `simulation/`, `api/`, `ui/`, `tests/`, `.github/`, `.devcontainer/`, `docs/`.
 - External packages: `fastapi >=0.115,<1.0`,
-  `uvicorn[standard] >=0.32,<1.0`.
+  `uvicorn[standard] >=0.32,<1.0`, `asyncpg >=0.30,<1.0`, `sqlalchemy[asyncio] >=2.0,<3.0`.
 - Dev tooling: TypeScript compiler (`npm run build`),
-  Python `compileall`, `unittest`.
+  Python `compileall`, `unittest`, GitHub CLI, PostgreSQL client, Docker-in-Docker, Azure CLI, azd, Terraform, Bicep,
+  MCP Inspector.
 
 ## Risks and Mitigations
 
@@ -379,6 +455,9 @@ Service a floor
 | Random spawning makes demos non-deterministic | Medium | High | Configurable `spawn_chance`; set to 0.0 for controlled demos |
 | In-memory state lost on restart | Low | Certain | Intentional for workshop simplicity; document in README |
 | WebSocket disconnect during demo | Medium | Low | Client auto-reconnects; status message indicates state |
+| Devcontainer feature incompatibility breaks Codespaces rebuild | High | Medium | Prefer verified feature IDs; document Debian trixie Docker-in-Docker requirements |
+| Setup friction consumes workshop time | Medium | Medium | Provide Codespaces-first path, validation commands, and troubleshooting table |
+| Optional PostgreSQL schema is mistaken for required persistence | Medium | Medium | State clearly that baseline simulation remains in-memory |
 
 ## Open Questions
 
@@ -396,6 +475,9 @@ Service a floor
 | 2026-05-09 | Cumulative average for wait time | Simpler to implement and explain; rolling window deferred to a future lab | Facilitator |
 | 2026-05-09 | No load balancing in dispatcher | Keeps the heuristic easy to read and extend in subsequent labs | Facilitator |
 | 2026-05-09 | 60-second refresh interval | Balances update frequency with meaningful sample size | Facilitator |
+| 2026-05-11 | Codespaces-first setup documentation | Matches workshop delivery needs and minimizes local install friction | Facilitator |
+| 2026-05-11 | PostgreSQL sidecar remains optional | Enables future persistence labs while preserving the starter app's in-memory simplicity | Facilitator |
+| 2026-05-11 | Copilot assets are part of the lab surface | Prompts, skills, instructions, and agents teach repeatable agentic workflows | Facilitator |
 
 ## Implementation Plan
 
@@ -413,6 +495,8 @@ Service a floor
 7. Write unittest suite covering spawn, dispatch, metrics.
 8. Validate: `compileall`, `unittest discover`, manual
    browser check.
+9. Document tutorial-style setup paths, prerequisites, useful commands, repository tour, and troubleshooting.
+10. Add reusable Copilot prompts and skills for devcontainer setup and PostgreSQL schema inspection.
 
 ## Appendix
 
@@ -422,3 +506,5 @@ Service a floor
   `.github/prompts/01.00.initialize-project.prompt.md`
 - Copilot instructions:
   `.github/copilot-instructions.md`
+- PostgreSQL schema inspection skill:
+  `.github/skills/postgres-schema-inspection/SKILL.md`
