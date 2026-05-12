@@ -1,9 +1,6 @@
 ---
-description: >-
-  Conventions for elevator dispatch simulation tests.
-  Use when writing, editing, or reviewing unittest files
-  under workspace/tests/.
 applyTo: "workspace/tests/**/*.py"
+description: "This file defines conventions and standards for unit tests in the elevator dispatch simulation solution."
 ---
 
 # Test Conventions

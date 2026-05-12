@@ -1,3 +1,8 @@
+---
+applyTo: workspace/**
+description: "Establish custom instructions for Azure deployments, including conventions, standards, proven practices, and supported deployment options."
+---
+
 # Azure Deployment Instructions
 
 This file defines conventions, standards, proven practices, and supported deployment options for migrating the elevator dispatch simulation solution to Azure.

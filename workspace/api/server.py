@@ -30,6 +30,7 @@ class ControlRequest(BaseModel):
 async def lifespan(application: FastAPI):
     database_engine = create_database_engine()
     application.state.database_engine = database_engine
+    engine.set_database_engine(database_engine)
     task = asyncio.create_task(engine.run())
     try:
         yield
