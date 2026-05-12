@@ -260,7 +260,7 @@ can extend in subsequent lab steps.
 | FR-019 | The simulation shall stop after 1 000 ticks, auto-pause, set `finished` to true, and display a completion message. | Must | `MAX_TICKS = 1000` |
 | FR-020 | The UI shall show an alert banner and a "Restart simulation" button when the simulation finishes. | Must | |
 | FR-021 | POST `/api/restart` shall reset all simulation state to initial values and resume ticking from 0. | Must | |
-| FR-022 | Each elevator cab shall have a distinct color: ev-01 green, ev-02 blue, ev-03 purple, ev-04 medium grey. | Must | Applied via CSS class per cab |
+| FR-022 | Each elevator cab shall have a distinct color: ev-01 green, ev-02 blue, ev-03 purple, ev-04 pink. | Must | Applied via CSS class per cab |
 | FR-023 | The repository README shall provide tutorial-style setup paths, prerequisites, validation commands, repository tour, and troubleshooting. | Must | Modeled on hands-on lab structure |
 | FR-024 | The repository shall include reusable Copilot prompts and skills for repeatable lab operations. | Should | Prompt and skill files under `.github/` |
 | FR-025 | The devcontainer shall provide optional PostgreSQL schema inspection support without making persistence mandatory. | Should | PostgreSQL sidecar, init SQL, and psql script |
@@ -271,6 +271,7 @@ can extend in subsequent lab steps.
 | FR-030 | Azure deployment conventions shall be captured in path-scoped instructions for `workspace/**`. | Should | `.github/instructions/azure-deployment.instructions.md` |
 | FR-031 | The repository shall include GitHub Copilot Review-agent prompts that require a branch, focused change, pull request, and scoped review criteria. | Should | Cab color prompt variants under `03.01` |
 | FR-032 | The repository documentation shall explain the `completed/` folder as an excluded facilitator reference solution for rebuild labs. | Should | Do not treat as Copilot source context |
+| FR-033 | The live dashboard shall render elevator cab `ev-04` with a pink fill color. | Must | Verify the `.elevator-cab.cab-ev-04` style in the served UI |
 
 ## Non-Functional Requirements
 
@@ -507,6 +508,8 @@ Restart simulation
   without database errors.
 - [x] AC-014: Given a small elevator cab color PR, when the participant invokes the matching `03.01` Review-agent prompt,
   then Copilot reviews the targeted selector, scope control, readability, and validation notes.
+- [ ] AC-015: Given the live dashboard is rendered, when elevator cab `ev-04` appears in the shaft grid, then its cab fill
+  color is pink and remains visually distinct from the other elevator cabs.
 
 ## Testing Strategy
 
@@ -549,7 +552,8 @@ Restart simulation
 - Test data: Inline fixtures in test methods.
 - Regression risks: Dispatch heuristic changes may affect
   elevator selection order; wait-time math depends on
-  tick-interval alignment.
+  tick-interval alignment; cab color changes can regress if CSS selectors for individual elevator IDs are renamed or
+  overridden.
 
 ## Dependencies
 
