@@ -8,8 +8,8 @@
 - Status: Approved
 - Created: 2026-05-09
 - Last updated: 2026-05-12
-- Target release or lab milestone: Labs 01-04 complete; Labs 02.03-02.06 persistence and reset workflows; Azure
-  migration preparation
+- Target release or lab milestone: Labs 01-04 complete; Labs 02.03-02.06 persistence and reset workflows; Lab 03.01 PR
+  review prompts; Azure migration preparation
 
 ## Summary
 
@@ -21,7 +21,7 @@ communication, simple scheduling heuristics, database-backed event logging, and 
 
 The repository should also function as a workshop lab environment. Participants need a clear setup path, prerequisite
 checklist, repeatable validation commands, and discoverable Copilot customizations for prompts, skills, agents,
-path-specific instructions, issue metadata, and Azure migration guidance.
+path-specific instructions, issue metadata, PR review workflows, and Azure migration guidance.
 
 ## Dashboard Target State
 
@@ -96,6 +96,8 @@ can extend in subsequent lab steps.
   lab experience.
 - Include reusable Copilot assets that demonstrate prompts, skills, instructions, agents, and repeatable verification
   workflows.
+- Demonstrate how small UI changes can be reviewed with GitHub Copilot Review-agent prompts through a branch and pull
+  request workflow.
 
 ## Non-Goals
 
@@ -208,6 +210,23 @@ can extend in subsequent lab steps.
   - App is still running: a fresh `simulation_runs` row or new passenger events may appear immediately after restart.
 - Outcome: Database state is aligned with the visible simulation lifecycle.
 
+### Use Case 7: Review a Small UI Color Change PR
+
+- Actor: Participant
+- Trigger: Creates a branch and pull request that changes a single elevator cab color.
+- Preconditions: Repository has a Review-agent prompt under `.github/prompts/` and the participant can open pull
+  requests.
+- Main flow:
+  1. Create a feature branch for the cab color change.
+  2. Update the targeted `.elevator-cab.cab-ev-*` selector in `workspace/ui/static/styles.css`.
+  3. Run focused validation such as `npm run build`, `python -m compileall .`, and `python -m unittest discover -s tests -v`.
+  4. Push the branch and open a pull request into `main`.
+  5. Invoke the GitHub Copilot Review agent with the corresponding `03.01` prompt.
+- Alternate or error flows:
+  - Review finds unrelated code changes: participant narrows the PR to the intended CSS change.
+  - Review finds contrast or readability issues: participant adjusts the red gradient or text treatment.
+- Outcome: Participant practices using Copilot Review for a small, scoped UI pull request.
+
 ## Functional Requirements
 
 | ID | Requirement | Priority | Notes |
@@ -240,8 +259,9 @@ can extend in subsequent lab steps.
 | FR-026 | When `DATABASE_URL` is set, the simulation shall write run metadata to `simulation_runs`. | Must | Optional persistence path |
 | FR-027 | When `DATABASE_URL` is set, passenger lifecycle events shall be written to `passenger_events`. | Must | Events: `created`, `assigned`, `boarded`, `exited` |
 | FR-028 | POST `/api/restart` shall clear PostgreSQL application tables before creating the fresh run row. | Must | Applies only when persistence is enabled |
-| FR-029 | The repository shall include prompt files for table reset, reset-on-restart, GitHub issue-type discovery, and Azure migration preparation. | Should | Prompts `02.05`, `02.06`, `03.00`, `04.00`, `04.01` |
+| FR-029 | The repository shall include prompt files for table reset, reset-on-restart, GitHub issue-type discovery, PR review, and Azure migration preparation. | Should | Prompts `02.05`, `02.06`, `03.00`, `03.01`, `04.00`, `04.01` |
 | FR-030 | Azure deployment conventions shall be captured in path-scoped instructions for `workspace/**`. | Should | `.github/instructions/azure-deployment.instructions.md` |
+| FR-031 | The repository shall include GitHub Copilot Review-agent prompts that require a branch, focused change, pull request, and scoped review criteria. | Should | Cab color prompt variants under `03.01` |
 
 ## Non-Functional Requirements
 
@@ -275,6 +295,7 @@ can extend in subsequent lab steps.
 - Setup states: Fresh Codespace, rebuilt devcontainer, manual local environment, database sidecar reachable, and database
   sidecar unavailable but app still runs in memory.
 - Database states: In-memory only, persistence enabled, tables reset manually, and tables reset via restart.
+- Pull request states: Feature branch created, PR opened, Review-agent prompt submitted, review feedback addressed.
 
 ## Data Requirements
 
@@ -468,6 +489,8 @@ Restart simulation
   are removed and a fresh `simulation_runs` row is created.
 - [x] AC-013: Given `DATABASE_URL` is absent, when the simulation runs or restarts, then the app continues in memory
   without database errors.
+- [x] AC-014: Given a small elevator cab color PR, when the participant invokes the matching `03.01` Review-agent prompt,
+  then Copilot reviews the targeted selector, scope control, readability, and validation notes.
 
 ## Testing Strategy
 
@@ -555,6 +578,7 @@ Restart simulation
 | 2026-05-12 | PostgreSQL event persistence is optional and tied to `DATABASE_URL` | Keeps baseline app simple while enabling analytics and inspection labs | Facilitator |
 | 2026-05-12 | Restart clears persisted application rows before creating a fresh run | Keeps database history aligned with the visible simulation lifecycle | Facilitator |
 | 2026-05-12 | Azure deployment guidance lives in scoped instructions and migration prompts | Prepares future Azure labs without changing starter runtime behavior | Facilitator |
+| 2026-05-12 | Cab color prompts are Review-agent PR workflows | Teaches scoped branch, PR, and Copilot review patterns with a low-risk UI change | Facilitator |
 
 ## Implementation Plan
 
@@ -578,6 +602,7 @@ Restart simulation
 12. Add reset-all-tables and reset-on-restart workflows with unit coverage.
 13. Add GitHub issue-type discovery prompt and labels/issue taxonomy guidance.
 14. Add Azure deployment instructions and migration prompt scaffolding.
+15. Add GitHub Copilot Review-agent prompts for small elevator cab color pull requests.
 
 ## Appendix
 
@@ -585,6 +610,8 @@ Restart simulation
   [live-dashboard-target-state.png](images/live-dashboard-target-state.png)
 - Initialization prompt:
   `.github/prompts/01.00.initialize-project.prompt.md`
+- README and PRD update prompt:
+  `.github/prompts/00.00.update-readme-and-prd.prompt.md`
 - Copilot instructions:
   `.github/copilot-instructions.md`
 - PostgreSQL schema inspection skill:
@@ -595,5 +622,10 @@ Restart simulation
   `.github/prompts/02.05.reset-all-tables.prompt.md`
 - Reset tables on restart prompt:
   `.github/prompts/02.06.reset-tables-upon-restart-simulation.prompt.md`
+- GitHub issue-type discovery prompt:
+  `.github/prompts/03.00.list-issue-types-mcp.prompt.md`
+- GitHub Copilot Review-agent cab color prompts:
+  `.github/prompts/03.01.change-ev02-cab-fill-color-to-red.prompt.md`
+  `.github/prompts/03.01.change-ev04-cab-fill-color-to-red.prompt.md`
 - Azure deployment instructions:
   `.github/instructions/azure-deployment.instructions.md`

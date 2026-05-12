@@ -173,7 +173,7 @@ Use this screenshot as the target state for the live dashboard layout.
 | Setup | Fork, Codespaces, prerequisites, validation | A working development environment. |
 | Lab 01 | Initialize the elevator dispatch app | Baseline FastAPI app, simulation, UI, and tests. |
 | Lab 02 | Add PostgreSQL and persistence labs | Compose sidecar, init SQL, event persistence, and table reset workflows. |
-| Lab 03 | Use GitHub issue metadata through MCP | Issue type discovery for structured planning and triage. |
+| Lab 03 | Use GitHub metadata and PR review workflows | Issue type discovery plus Review-agent prompts for small UI PRs. |
 | Lab 04 | Prepare Azure migration guidance | Azure deployment instructions and migration prompt scaffolding. |
 | Future labs | Basement support, analytics, deployment implementation, and richer dispatch experiments | Incremental extensions driven by prompts, PRDs, and tests. |
 
@@ -182,7 +182,7 @@ Use this screenshot as the target state for the live dashboard layout.
 This checklist follows the numeric prompt sequence in `.github/prompts/` so participants can see which reusable
 workflows have been authored or completed.
 
-- [x] `00.00`: Create meta/update README prompt assets for maintaining workshop documentation.
+- [x] `00.00`: Create meta/update README and PRD prompt assets for maintaining workshop documentation.
 - [x] `01.00`: Initialize the FastAPI elevator dispatch app, dashboard, simulation modules, and tests.
 - [x] `01.01`: Create the README task-list workflow that anchors the lab sequence.
 - [x] `02.00`: Add the PostgreSQL devcontainer sidecar, init schema, and optional database engine bootstrap.
@@ -193,6 +193,7 @@ workflows have been authored or completed.
 - [x] `02.05`: Add a reset-all-tables prompt that verifies tables, queries records, deletes rows, and validates counts.
 - [x] `02.06`: Reset PostgreSQL tables whenever the UI **Restart simulation** flow calls `POST /api/restart`.
 - [x] `03.00`: List repository-supported GitHub issue types through MCP.
+- [x] `03.01`: Add GitHub Copilot Review-agent prompt variants for reviewing ev-02 and ev-04 cab color PRs.
 - [x] `04.00`: Establish Azure deployment custom instructions scoped to `workspace/**`.
 - [ ] `04.01`: Expand the Azure migration prompt into an executable deployment lab.
 - [ ] Future: Add dashboard analytics for run history and dispatch performance.
@@ -203,7 +204,7 @@ workflows have been authored or completed.
 | --- | --- | --- |
 | Repository instructions | `.github/copilot-instructions.md` | Project structure, architecture, Python, frontend, PRD, and change-discipline rules. |
 | Path instructions | `.github/instructions/` | TypeScript, `unittest`, and Azure deployment conventions. |
-| Prompt files | `.github/prompts/` | Reusable lab workflows for initialization, PostgreSQL, GitHub issue metadata, and Azure migration. |
+| Prompt files | `.github/prompts/` | Reusable lab workflows for initialization, PostgreSQL, GitHub issue metadata, PR review, and Azure migration. |
 | Skills | `.github/skills/` | PostgreSQL devcontainer setup, schema inspection, and data persistence workflows. |
 | Agents | `.github/agents/` | Documentation and Markdown lint/edit helpers. |
 
