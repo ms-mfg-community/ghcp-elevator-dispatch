@@ -28,4 +28,6 @@ Create and update README.md files with clear project descriptions
 Structure README sections logically: overview, installation, usage, contributing
 Write scannable content with proper headings and formatting
 Add appropriate badges, links, and navigation elements
+Please enumerate the content of this repo recursivley to create or update the readme.
 Use relative links (e.g., `docs/CONTRIBUTING.md`) instead of absolute URLs for files within the repository
+  
