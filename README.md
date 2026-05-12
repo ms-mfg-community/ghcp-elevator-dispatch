@@ -74,6 +74,9 @@ Manual setup is useful when you cannot use Codespaces or a devcontainer. Install
 PostgreSQL is optional for the app because the simulation engine still keeps live state in memory, but setting
 `DATABASE_URL` enables persistence for simulation runs and passenger events.
 
+The Codespaces and devcontainer path defines `DATABASE_URL` for the app container automatically. Manual local setup only
+uses PostgreSQL if you export `DATABASE_URL` yourself.
+
 ```bash
 cd workspace
 python -m venv .venv
@@ -98,13 +101,20 @@ python -m unittest discover -s tests -v
 npm run build
 ```
 
-Start the dashboard in in-memory mode:
+Start the dashboard with the current environment. In Codespaces and the devcontainer this uses the PostgreSQL sidecar
+because `DATABASE_URL` is already configured; in a manual shell without `DATABASE_URL`, it runs in in-memory-only mode:
 
 ```bash
 python -m uvicorn api.server:app --reload --port 7000
 ```
 
-Start the dashboard with PostgreSQL event persistence:
+Force an in-memory-only run from a Unix-like shell that already has `DATABASE_URL` set:
+
+```bash
+env -u DATABASE_URL python -m uvicorn api.server:app --reload --port 7000
+```
+
+Start the dashboard with PostgreSQL event persistence explicitly:
 
 ```bash
 DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch \
@@ -146,6 +156,17 @@ flowchart LR
 | Tests | `unittest` coverage for dispatcher, simulation, and database helper behavior | `workspace/tests/` |
 | Devcontainer | Codespaces runtime, Docker-in-Docker, PostgreSQL sidecar, tooling | `.devcontainer/` |
 | Copilot customization | Prompts, skills, agents, path-specific instructions | `.github/` |
+
+### Runtime API Quick Reference
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /` | Serves the dashboard HTML. |
+| `GET /api/state` | Returns the latest simulation snapshot. |
+| `POST /api/passengers` | Adds a validated passenger request with different origin and destination floors. |
+| `POST /api/control` | Pauses or resumes the simulation. |
+| `POST /api/restart` | Restarts the in-memory simulation and resets persistence tables when `DATABASE_URL` is configured. |
+| `GET /ws` | Streams live state snapshots to the dashboard over WebSockets. |
 
 ## Dashboard Target State
 
@@ -232,7 +253,8 @@ Keep these caveats in mind:
 | Activate venv | `source workspace/.venv/bin/activate` |
 | Install Python deps | `cd workspace && python -m pip install -r requirements.txt` |
 | Install UI deps | `cd workspace && npm install` |
-| Run app | `cd workspace && python -m uvicorn api.server:app --reload --port 7000` |
+| Run app with current environment | `cd workspace && python -m uvicorn api.server:app --reload --port 7000` |
+| Run app without persistence | `cd workspace && env -u DATABASE_URL python -m uvicorn api.server:app --reload --port 7000` |
 | Run app with Postgres persistence | `cd workspace && DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch python -m uvicorn api.server:app --reload --port 7000` |
 | Compile Python | `cd workspace && python -m compileall .` |
 | Run tests | `cd workspace && python -m unittest discover -s tests -v` |
@@ -271,7 +293,9 @@ ghcp-elevator-dispatch/
 
 The devcontainer includes a PostgreSQL 16 sidecar for persistence and analytics labs. The simulation still keeps live
 state in memory, but the FastAPI app can write run metadata and passenger lifecycle events to PostgreSQL when
-`DATABASE_URL` is set. Clicking **Restart simulation** clears the application tables before creating the fresh run row.
+`DATABASE_URL` is set. The devcontainer sets this variable to the default sidecar connection string; manual environments
+must opt in by exporting it. Clicking **Restart simulation** clears the application tables before creating the fresh run
+row.
 
 Default connection string:
 
