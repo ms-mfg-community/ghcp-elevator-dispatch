@@ -166,7 +166,7 @@ flowchart LR
 | `POST /api/passengers` | Adds a validated passenger request with different origin and destination floors. |
 | `POST /api/control` | Pauses or resumes the simulation. |
 | `POST /api/restart` | Restarts the in-memory simulation and resets persistence tables when `DATABASE_URL` is configured. |
-| `GET /ws` | Streams live state snapshots to the dashboard over WebSockets. |
+| `WebSocket /ws` | Streams live state snapshots to the dashboard. |
 
 ## Dashboard Target State
 
