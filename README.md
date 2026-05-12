@@ -228,7 +228,7 @@ workflows have been authored or completed.
 ## Repository Structure
 
 ```text
-ghcp-temp-elevator-disptach/
+ghcp-elevator-dispatch/
 ├── .devcontainer/                 # Codespaces and devcontainer configuration
 │   ├── devcontainer.json
 │   ├── docker-compose.yml
