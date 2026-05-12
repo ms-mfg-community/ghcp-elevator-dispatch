@@ -23,6 +23,11 @@ The repository should also function as a workshop lab environment. Participants 
 checklist, repeatable validation commands, and discoverable Copilot customizations for prompts, skills, agents,
 path-specific instructions, issue metadata, PR review workflows, and Azure migration guidance.
 
+For demonstration resets, the repository may include a top-level `completed/` folder containing a facilitator reference
+solution copied from `workspace/`. That folder is intentionally excluded from Copilot context during rebuild labs so
+participants can recreate the solution from indexed prompts and visible project assets instead of using the completed
+implementation as source material.
+
 ## Dashboard Target State
 
 The screenshot below shows the desired state of the live
@@ -98,10 +103,13 @@ can extend in subsequent lab steps.
   workflows.
 - Demonstrate how small UI changes can be reviewed with GitHub Copilot Review-agent prompts through a branch and pull
   request workflow.
+- Support a facilitator workflow where `workspace/` can be moved to `completed/` and rebuilt from indexed prompts while
+  preserving the completed solution as excluded reference material.
 
 ## Non-Goals
 
 - Making database persistence required for the core simulation.
+- Using the `completed/` reference solution as source context for Copilot during rebuild labs.
 - Authentication or authorization.
 - ML-based or optimization-library dispatch algorithms.
 - Mobile-native or framework-based (React, Vue) UI.
@@ -262,6 +270,7 @@ can extend in subsequent lab steps.
 | FR-029 | The repository shall include prompt files for table reset, reset-on-restart, GitHub issue-type discovery, PR review, and Azure migration preparation. | Should | Prompts `02.05`, `02.06`, `03.00`, `03.01`, `04.00`, `04.01` |
 | FR-030 | Azure deployment conventions shall be captured in path-scoped instructions for `workspace/**`. | Should | `.github/instructions/azure-deployment.instructions.md` |
 | FR-031 | The repository shall include GitHub Copilot Review-agent prompts that require a branch, focused change, pull request, and scoped review criteria. | Should | Cab color prompt variants under `03.01` |
+| FR-032 | The repository documentation shall explain the `completed/` folder as an excluded facilitator reference solution for rebuild labs. | Should | Do not treat as Copilot source context |
 
 ## Non-Functional Requirements
 
@@ -296,6 +305,8 @@ can extend in subsequent lab steps.
   sidecar unavailable but app still runs in memory.
 - Database states: In-memory only, persistence enabled, tables reset manually, and tables reset via restart.
 - Pull request states: Feature branch created, PR opened, Review-agent prompt submitted, review feedback addressed.
+- Rebuild lab states: Completed solution moved to `completed/`, empty `workspace/`, prompts executed in numeric order,
+  rebuilt app validated against tests and smoke checks.
 
 ## Data Requirements
 
@@ -359,6 +370,10 @@ The repository should remain workshop-first: small modules, explicit state trans
 The devcontainer may include optional services and tools that support later labs, but those services must not obscure the
 starter app or make the baseline simulation harder to run.
 
+The `completed/` folder, when present, is a facilitator-only reference snapshot. It should remain outside Copilot source
+context during rebuild labs. Rebuild validation should rely on visible prompts, instructions, tests, documentation, and
+runtime checks rather than comparing directly against hidden completed files.
+
 ### Proposed Components
 
 | Component | Responsibility | Files or Location |
@@ -374,6 +389,7 @@ starter app or make the baseline simulation harder to run.
 | Tests | unittest suite for spawn, dispatch, metrics | `tests/` |
 | Devcontainer | Codespaces runtime, tooling features, app/Postgres Compose services | `.devcontainer/` |
 | Copilot customizations | Repository instructions, path instructions, prompts, skills, agents | `.github/` |
+| Completed reference | Excluded facilitator reference solution for rebuild labs | `completed/` |
 | Documentation | Tutorial README, app quickstart, product requirements | `README.md`, `workspace/README.md`, `docs/` |
 
 ### Data Model
@@ -579,6 +595,7 @@ Restart simulation
 | 2026-05-12 | Restart clears persisted application rows before creating a fresh run | Keeps database history aligned with the visible simulation lifecycle | Facilitator |
 | 2026-05-12 | Azure deployment guidance lives in scoped instructions and migration prompts | Prepares future Azure labs without changing starter runtime behavior | Facilitator |
 | 2026-05-12 | Cab color prompts are Review-agent PR workflows | Teaches scoped branch, PR, and Copilot review patterns with a low-risk UI change | Facilitator |
+| 2026-05-12 | `completed/` is an excluded facilitator reference solution | Supports rebuild-from-prompts demos without letting Copilot copy the finished workspace | Facilitator |
 
 ## Implementation Plan
 
@@ -603,6 +620,7 @@ Restart simulation
 13. Add GitHub issue-type discovery prompt and labels/issue taxonomy guidance.
 14. Add Azure deployment instructions and migration prompt scaffolding.
 15. Add GitHub Copilot Review-agent prompts for small elevator cab color pull requests.
+16. Document the `completed/` reference-solution workflow and rebuild-lab caveats.
 
 ## Appendix
 

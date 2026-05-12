@@ -198,6 +198,22 @@ workflows have been authored or completed.
 - [ ] `04.01`: Expand the Azure migration prompt into an executable deployment lab.
 - [ ] Future: Add dashboard analytics for run history and dispatch performance.
 
+## Completed Reference Solution
+
+During lab demonstrations, facilitators may move the current `workspace/` contents into a top-level `completed/` folder
+and then rebuild the app in a fresh, empty `workspace/` by running the indexed prompts in sequence. The `completed/`
+folder is intended to act as a facilitator reference solution and is excluded from repository-level Copilot context so
+participants practice rebuilding from prompts, instructions, tests, and visible documentation instead of copying the
+finished app.
+
+Keep these caveats in mind:
+
+- Treat `completed/` as a reference snapshot, not an implementation source for Copilot during rebuild labs.
+- Content exclusion controls Copilot context; it is not a filesystem or Git security boundary.
+- Expect functionally equivalent rebuilt code rather than byte-for-byte identical output.
+- Validate after each prompt or lab cluster with `compileall`, `unittest`, `npm run build`, and an app smoke test.
+- Reset PostgreSQL tables or volumes when a clean database state is needed for the rebuilt workspace.
+
 ## Pre-Configured Copilot Features
 
 | Feature | Location | Notes |
@@ -240,6 +256,7 @@ ghcp-elevator-dispatch/
 │   ├── skills/                    # Project skills and script artifacts
 │   └── copilot-instructions.md    # Repository-wide Copilot instructions
 ├── docs/                          # PRDs and reference images
+├── completed/                     # Excluded facilitator reference solution, when populated
 ├── workspace/
 │   ├── api/                       # FastAPI application
 │   ├── simulation/                # Elevator dispatch domain model
