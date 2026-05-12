@@ -7,7 +7,8 @@ and validate changes with repeatable commands.
 ## What It Does
 
 The app simulates a 5-floor building with 4 elevators. A simple dispatcher assigns passengers to compatible elevators,
-while a FastAPI backend streams live snapshots to a browser dashboard over WebSockets.
+while a FastAPI backend streams live snapshots to a browser dashboard over WebSockets. When `DATABASE_URL` is set, the
+app also writes simulation run metadata and passenger lifecycle events to PostgreSQL.
 
 ## Prerequisites
 
@@ -15,13 +16,13 @@ while a FastAPI backend streams live snapshots to a browser dashboard over WebSo
 | --- | --- |
 | Codespaces or devcontainer | Dependencies are installed by the repository devcontainer. |
 | Manual local setup | Python 3.10+, Node.js LTS, npm, and Git. |
-| Optional database inspection | PostgreSQL client (`psql`) and access to the devcontainer Postgres sidecar. |
+| Optional database persistence and inspection | PostgreSQL client (`psql`) and access to the devcontainer Postgres sidecar. |
 
 ## Project Layout
 
 ```text
 workspace/
-├── api/          # FastAPI app, routes, WebSocket lifecycle, database bootstrap
+├── api/          # FastAPI app, routes, WebSocket lifecycle, database helpers
 ├── simulation/   # Building, elevator, passenger, dispatcher, and tick engine
 ├── tests/        # unittest-based regression suite
 ├── ui/           # HTML template, TypeScript source, CSS, served JavaScript
@@ -52,9 +53,16 @@ python -m pip install -r requirements.txt
 npm install
 ```
 
-Start the app:
+Start the app in in-memory mode:
 
 ```bash
+python -m uvicorn api.server:app --reload --port 7000
+```
+
+Start the app with PostgreSQL persistence enabled:
+
+```bash
+DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch \
 python -m uvicorn api.server:app --reload --port 7000
 ```
 
@@ -72,8 +80,8 @@ npm run build
 
 ## Inspect PostgreSQL
 
-The current simulation state is in memory, but the devcontainer includes a PostgreSQL sidecar for later persistence labs.
-From the repository root, inspect the schema with:
+The live simulation state remains in memory, but the app writes database rows when `DATABASE_URL` is configured. From the
+repository root, inspect the schema with:
 
 ```bash
 .github/skills/postgres-schema-inspection/scripts/inspect-postgres-schema.sh
@@ -85,8 +93,9 @@ Or from this folder, use the convenience wrapper:
 scripts/inspect-postgres-schema.sh
 ```
 
-Expected tables are `simulation_runs`, `passenger_events`, and `scenarios`. Empty row counts are normal until a future
-lab writes simulation events to the database.
+Expected tables are `simulation_runs`, `passenger_events`, and `scenarios`. `simulation_runs` stores run metadata, and
+`passenger_events` stores `created`, `assigned`, `boarded`, and `exited` events. Clicking **Restart simulation** calls
+`POST /api/restart`, clears application table rows, and creates a fresh run row when persistence is enabled.
 
 ## Extension Points
 
@@ -94,13 +103,14 @@ lab writes simulation events to the database.
 | --- | --- |
 | `simulation/dispatcher.py` | Try alternative dispatch heuristics while keeping the logic easy to explain. |
 | `simulation/simulation.py` | Adjust tick lifecycle, passenger spawning, pause/resume, or completion behavior. |
+| `api/database.py` | Extend optional persistence helpers without making the database mandatory. |
 | `api/server.py` | Add validated endpoints or API-adjacent behavior through `SimulationEngine` methods. |
 | `ui/main.ts` and `ui/static/styles.css` | Extend the live dashboard while keeping served JavaScript in sync. |
 | `tests/` | Add focused `unittest` coverage for simulation and dispatcher changes. |
 
 ## Notes for the Lab
 
-- Keep simulation state in memory unless a lab explicitly asks for persistence.
+- Keep live simulation state in memory; use PostgreSQL only for optional run and event persistence.
 - Preserve the 5-floor, 4-elevator default scenario.
 - Prefer small, explicit modules and teachable heuristics over clever abstractions.
 - When changing TypeScript source, run `npm run build` so `ui/static/main.js` stays current.

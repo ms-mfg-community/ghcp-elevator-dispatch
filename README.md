@@ -1,9 +1,9 @@
 # Elevator Dispatch Workshop - Hands-On Lab
 
 A hands-on GitHub Copilot workshop for building and extending a real-time elevator dispatch simulation. The lab uses a
-Python FastAPI backend, a framework-free TypeScript dashboard, a PostgreSQL devcontainer sidecar, and repository-level
-Copilot customizations so participants can practice prompts, skills, instructions, and iterative application changes on
-a small but realistic codebase.
+Python FastAPI backend, a framework-free TypeScript dashboard, an optional PostgreSQL persistence path, a PostgreSQL
+devcontainer sidecar, and repository-level Copilot customizations so participants can practice prompts, skills,
+instructions, and iterative application changes on a small but realistic codebase.
 
 > Pre-work: complete setup before the workshop session begins so you can spend the session building, testing, and using
 > Copilot rather than installing tools.
@@ -71,8 +71,8 @@ before the workshop.
 ### Option C - Manual Setup
 
 Manual setup is useful when you cannot use Codespaces or a devcontainer. Install Python 3.10+, Node.js LTS, npm, and Git.
-PostgreSQL is optional for the current app because the simulation still runs in memory, but `psql` is useful for schema
-inspection labs.
+PostgreSQL is optional for the app because the simulation engine still keeps live state in memory, but setting
+`DATABASE_URL` enables persistence for simulation runs and passenger events.
 
 ```bash
 cd workspace
@@ -98,9 +98,16 @@ python -m unittest discover -s tests -v
 npm run build
 ```
 
-Start the dashboard:
+Start the dashboard in in-memory mode:
 
 ```bash
+python -m uvicorn api.server:app --reload --port 7000
+```
+
+Start the dashboard with PostgreSQL event persistence:
+
+```bash
+DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch \
 python -m uvicorn api.server:app --reload --port 7000
 ```
 
@@ -110,7 +117,9 @@ Open <http://127.0.0.1:7000> to view the live elevator dashboard.
 
 The application simulates a 5-floor building with 4 elevators. A simple dispatcher assigns passengers to the nearest
 compatible elevator, while a FastAPI server exposes REST endpoints and a WebSocket stream. The browser dashboard renders
-live elevator cabs, passenger dots, floor metadata, movement totals, queued passengers, and average wait time.
+live elevator cabs, passenger dots, floor metadata, movement totals, queued passengers, and average wait time. When
+`DATABASE_URL` is configured, the server also writes simulation run metadata and passenger lifecycle events to PostgreSQL
+without changing the dashboard experience.
 
 ```mermaid
 flowchart LR
@@ -118,23 +127,23 @@ flowchart LR
    FastAPI[FastAPI app\nREST endpoints and WebSocket]
    Engine[SimulationEngine\nasync tick loop and lock]
    Domain[Simulation domain\nBuilding Elevators Passengers Dispatcher]
-   Postgres[(PostgreSQL sidecar\noptional future persistence)]
-   Tests[unittest suite\ndispatch and simulation checks]
+   Postgres[(PostgreSQL sidecar\noptional run and event persistence)]
+   Tests[unittest suite\ndispatch simulation database checks]
 
    Browser <-->|REST and WebSocket| FastAPI
    FastAPI --> Engine
    Engine --> Domain
-   FastAPI -. optional DATABASE_URL .-> Postgres
+   Engine -. optional DATABASE_URL .-> Postgres
    Tests --> Engine
    Tests --> Domain
 ```
 
 | Area | Responsibility | Location |
 | --- | --- | --- |
-| API | FastAPI routes, request validation, WebSocket updates | `workspace/api/` |
+| API | FastAPI routes, request validation, database helpers, WebSocket updates | `workspace/api/` |
 | Simulation | Building, elevators, passengers, dispatcher, tick lifecycle | `workspace/simulation/` |
 | UI | HTML template, TypeScript source, served JavaScript, CSS | `workspace/ui/` |
-| Tests | `unittest` coverage for dispatcher and simulation behavior | `workspace/tests/` |
+| Tests | `unittest` coverage for dispatcher, simulation, and database helper behavior | `workspace/tests/` |
 | Devcontainer | Codespaces runtime, Docker-in-Docker, PostgreSQL sidecar, tooling | `.devcontainer/` |
 | Copilot customization | Prompts, skills, agents, path-specific instructions | `.github/` |
 
@@ -163,30 +172,39 @@ Use this screenshot as the target state for the live dashboard layout.
 | --- | --- | --- |
 | Setup | Fork, Codespaces, prerequisites, validation | A working development environment. |
 | Lab 01 | Initialize the elevator dispatch app | Baseline FastAPI app, simulation, UI, and tests. |
-| Lab 02 | Add PostgreSQL devcontainer support | Compose sidecar, init SQL, optional database engine. |
-| Lab 03 | Add cloud and modernization tooling | Devcontainer features for GitHub, Azure, Docker, Terraform, Bicep, MCP, and psql. |
-| Lab 04 | Create reusable Copilot assets | Prompts and skills that automate repeatable workshop tasks. |
-| Future labs | Persistence, analytics, deployment, and richer dispatch experiments | Incremental extensions driven by PRDs and tests. |
+| Lab 02 | Add PostgreSQL and persistence labs | Compose sidecar, init SQL, event persistence, and table reset workflows. |
+| Lab 03 | Use GitHub issue metadata through MCP | Issue type discovery for structured planning and triage. |
+| Lab 04 | Prepare Azure migration guidance | Azure deployment instructions and migration prompt scaffolding. |
+| Future labs | Basement support, analytics, deployment implementation, and richer dispatch experiments | Incremental extensions driven by prompts, PRDs, and tests. |
 
 ### Lab Progress
 
-- [x] Setup: fork or open the workshop repository, choose an environment path, and validate the toolchain.
-- [x] Lab 01: Initialize the FastAPI elevator dispatch app, dashboard, simulation modules, and tests.
-- [x] Lab 02: Add the PostgreSQL devcontainer sidecar, init schema, and optional database engine bootstrap.
-- [x] Lab 03: Add cloud and modernization tooling to the devcontainer.
-- [x] Lab 04: Create reusable Copilot prompts and skills, including PostgreSQL schema inspection.
-- [ ] Future lab: Persist simulation runs and passenger events to PostgreSQL.
-- [ ] Future lab: Add dashboard analytics for run history and dispatch performance.
-- [ ] Future lab: Prepare an Azure deployment path with infrastructure-as-code validation.
+This checklist follows the numeric prompt sequence in `.github/prompts/` so participants can see which reusable
+workflows have been authored or completed.
+
+- [x] `00.00`: Create meta/update README prompt assets for maintaining workshop documentation.
+- [x] `01.00`: Initialize the FastAPI elevator dispatch app, dashboard, simulation modules, and tests.
+- [x] `01.01`: Create the README task-list workflow that anchors the lab sequence.
+- [x] `02.00`: Add the PostgreSQL devcontainer sidecar, init schema, and optional database engine bootstrap.
+- [x] `02.01`: Add cloud and modernization tooling to the devcontainer.
+- [x] `02.02`: Add a Coding Agent prompt for GitHub Copilot CLI/devcontainer feature work.
+- [x] `02.03`: Persist simulation runs and passenger lifecycle events to PostgreSQL when `DATABASE_URL` is set.
+- [ ] `02.04`: Optional Coding Agent exercise to add a basement level and update the UI animation.
+- [x] `02.05`: Add a reset-all-tables prompt that verifies tables, queries records, deletes rows, and validates counts.
+- [x] `02.06`: Reset PostgreSQL tables whenever the UI **Restart simulation** flow calls `POST /api/restart`.
+- [x] `03.00`: List repository-supported GitHub issue types through MCP.
+- [x] `04.00`: Establish Azure deployment custom instructions scoped to `workspace/**`.
+- [ ] `04.01`: Expand the Azure migration prompt into an executable deployment lab.
+- [ ] Future: Add dashboard analytics for run history and dispatch performance.
 
 ## Pre-Configured Copilot Features
 
 | Feature | Location | Notes |
 | --- | --- | --- |
 | Repository instructions | `.github/copilot-instructions.md` | Project structure, architecture, Python, frontend, PRD, and change-discipline rules. |
-| Path instructions | `.github/instructions/` | TypeScript and `unittest` conventions. |
-| Prompt files | `.github/prompts/` | Reusable lab workflows for initialization, task lists, PostgreSQL, and devcontainer tooling. |
-| Skills | `.github/skills/` | PostgreSQL devcontainer setup and schema inspection workflows. |
+| Path instructions | `.github/instructions/` | TypeScript, `unittest`, and Azure deployment conventions. |
+| Prompt files | `.github/prompts/` | Reusable lab workflows for initialization, PostgreSQL, GitHub issue metadata, and Azure migration. |
+| Skills | `.github/skills/` | PostgreSQL devcontainer setup, schema inspection, and data persistence workflows. |
 | Agents | `.github/agents/` | Documentation and Markdown lint/edit helpers. |
 
 ## Useful Commands
@@ -198,11 +216,13 @@ Use this screenshot as the target state for the live dashboard layout.
 | Install Python deps | `cd workspace && python -m pip install -r requirements.txt` |
 | Install UI deps | `cd workspace && npm install` |
 | Run app | `cd workspace && python -m uvicorn api.server:app --reload --port 7000` |
+| Run app with Postgres persistence | `cd workspace && DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch python -m uvicorn api.server:app --reload --port 7000` |
 | Compile Python | `cd workspace && python -m compileall .` |
 | Run tests | `cd workspace && python -m unittest discover -s tests -v` |
 | Build UI | `cd workspace && npm run build` |
 | Inspect Postgres schema | `.github/skills/postgres-schema-inspection/scripts/inspect-postgres-schema.sh` |
 | Connect with psql | `psql postgresql://elevator:elevator@postgres:5432/elevator_dispatch` |
+| Count persisted rows | `PGPASSWORD=elevator psql -h postgres -U elevator -d elevator_dispatch -c "SELECT event_type, COUNT(*) FROM passenger_events GROUP BY event_type;"` |
 
 ## Repository Structure
 
@@ -215,14 +235,14 @@ ghcp-temp-elevator-disptach/
 ├── .github/
 │   ├── agents/                    # Custom Copilot agent profiles
 │   ├── instructions/              # Path-specific instructions
-│   ├── prompts/                   # Reusable prompt workflows
+│   ├── prompts/                   # Reusable prompt workflows, numbered by lab sequence
 │   ├── skills/                    # Project skills and script artifacts
 │   └── copilot-instructions.md    # Repository-wide Copilot instructions
 ├── docs/                          # PRDs and reference images
 ├── workspace/
 │   ├── api/                       # FastAPI application
 │   ├── simulation/                # Elevator dispatch domain model
-│   ├── tests/                     # unittest suite
+│   ├── tests/                     # unittest suite, including database helper tests
 │   ├── ui/                        # Dashboard template and assets
 │   ├── package.json               # TypeScript build tooling
 │   └── requirements.txt           # Python dependencies
@@ -231,8 +251,9 @@ ghcp-temp-elevator-disptach/
 
 ## PostgreSQL Sidecar
 
-The devcontainer includes a PostgreSQL 16 sidecar for future persistence and analytics labs. The current app still keeps
-simulation state in memory, so empty database tables are expected until a persistence lab writes data.
+The devcontainer includes a PostgreSQL 16 sidecar for persistence and analytics labs. The simulation still keeps live
+state in memory, but the FastAPI app can write run metadata and passenger lifecycle events to PostgreSQL when
+`DATABASE_URL` is set. Clicking **Restart simulation** clears the application tables before creating the fresh run row.
 
 Default connection string:
 
@@ -252,6 +273,15 @@ Expected tables:
 - `passenger_events`
 - `scenarios`
 
+Runtime behavior:
+
+- `simulation_runs` records run metadata, including dispatcher strategy, tick interval, spawn chance, totals, and wait
+   time aggregates.
+- `passenger_events` records `created`, `assigned`, `boarded`, and `exited` events.
+- `scenarios` is reserved for future replay and analytics labs.
+- `POST /api/restart` deletes records from `passenger_events`, `scenarios`, and `simulation_runs`, then creates a fresh
+   run row when persistence is enabled.
+
 ## Troubleshooting
 
 | Symptom | Try This |
@@ -260,6 +290,8 @@ Expected tables:
 | `npm` is missing | Rebuild the devcontainer so the Node feature is installed, or install Node.js LTS for manual setup. |
 | `psql` is missing | Rebuild the devcontainer so the PostgreSQL client package is installed. |
 | Postgres tables are missing | Recreate the Postgres volume or apply `.devcontainer/postgres-init/001-schema.sql`; init scripts run only when the volume is first created. |
+| Passenger events are not written | Start uvicorn with `DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch`. |
+| Tables repopulate after reset | Stop or pause the running app, or remember that the simulation may immediately write a fresh run or new passenger events after restart. |
 | Port 7000 is already in use | Start uvicorn with another port, for example `--port 7001`. |
 | UI changes are not reflected | Update `workspace/ui/main.ts`, run `npm run build`, and verify `workspace/ui/static/main.js` changed. |
 

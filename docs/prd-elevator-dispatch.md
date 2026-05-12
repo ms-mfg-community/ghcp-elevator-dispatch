@@ -7,19 +7,21 @@
 - Stakeholders: Workshop participants, facilitator
 - Status: Approved
 - Created: 2026-05-09
-- Last updated: 2026-05-11
-- Target release or lab milestone: Lab 01 - Initialize Project; Labs 02-04 - Devcontainer and Copilot assets
+- Last updated: 2026-05-12
+- Target release or lab milestone: Labs 01-04 complete; Labs 02.03-02.06 persistence and reset workflows; Azure
+  migration preparation
 
 ## Summary
 
-Build an in-memory elevator dispatch simulation for a 5-floor, 4-elevator building, exposed through a FastAPI backend
-and visualized in a real-time browser dashboard. The project serves as a hands-on workshop starter that teaches modular
-Python design, state management, async WebSocket communication, simple scheduling heuristics, and Copilot-assisted
-engineering workflows.
+Build an elevator dispatch simulation for a 5-floor, 4-elevator building, exposed through a FastAPI backend and
+visualized in a real-time browser dashboard. The live simulation state remains in memory, while an optional PostgreSQL
+persistence path records simulation runs and passenger lifecycle events when `DATABASE_URL` is configured. The project
+serves as a hands-on workshop starter that teaches modular Python design, state management, async WebSocket
+communication, simple scheduling heuristics, database-backed event logging, and Copilot-assisted engineering workflows.
 
 The repository should also function as a workshop lab environment. Participants need a clear setup path, prerequisite
-checklist, repeatable validation commands, and discoverable Copilot customizations for prompts, skills, agents, and
-path-specific instructions.
+checklist, repeatable validation commands, and discoverable Copilot customizations for prompts, skills, agents,
+path-specific instructions, issue metadata, and Azure migration guidance.
 
 ## Dashboard Target State
 
@@ -89,6 +91,7 @@ can extend in subsequent lab steps.
 - Keep the codebase small, readable, and easy to extend in
   a workshop setting.
 - Demonstrate async Python, WebSocket streaming, and vanilla HTML/CSS/TypeScript without frameworks.
+- Demonstrate optional PostgreSQL event persistence without making the database required for baseline use.
 - Provide workshop-grade setup documentation, validation commands, and troubleshooting guidance modeled on a hands-on
   lab experience.
 - Include reusable Copilot assets that demonstrate prompts, skills, instructions, agents, and repeatable verification
@@ -101,7 +104,7 @@ can extend in subsequent lab steps.
 - ML-based or optimization-library dispatch algorithms.
 - Mobile-native or framework-based (React, Vue) UI.
 - Multi-building or multi-tenant support.
-- Production cloud deployment, secret management, or enterprise identity integration.
+- Implementing production cloud deployment, secret management, or enterprise identity integration in the starter app.
 
 ## Users and Personas
 
@@ -171,10 +174,39 @@ can extend in subsequent lab steps.
   4. UI shows an alert banner and a "Restart
      simulation" button.
   5. Participant clicks "Restart simulation".
-  6. All state resets to initial values; tick resumes
-     from 0.
+  6. All in-memory state resets to initial values; tick resumes from 0.
+  7. If PostgreSQL persistence is enabled, application tables are cleared before the fresh run row is created.
 - Outcome: A fresh simulation begins with no leftover
-  passengers or elevator state.
+  passengers, elevator state, or previous persisted event history.
+
+### Use Case 5: Persist Passenger Events for Inspection
+
+- Actor: Participant
+- Trigger: Starts the app with `DATABASE_URL` configured.
+- Preconditions: PostgreSQL sidecar is running and the schema has been initialized.
+- Main flow:
+  1. Start `uvicorn` with `DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch`.
+  2. Let the simulation tick or add passengers manually.
+  3. Query `simulation_runs` and `passenger_events` with `psql`.
+  4. Observe `created`, `assigned`, `boarded`, and `exited` records.
+- Alternate or error flows:
+  - `DATABASE_URL` absent: the app runs in memory and skips persistence.
+  - Database unavailable: persistence operations fail without crashing the simulation.
+- Outcome: Participants can inspect database-backed run history and passenger lifecycle events for future analytics labs.
+
+### Use Case 6: Reset Database Tables for a Clean Demo
+
+- Actor: Participant or facilitator
+- Trigger: Runs the reset-all-tables prompt or clicks **Restart simulation** in the UI.
+- Preconditions: PostgreSQL sidecar is running.
+- Main flow:
+  1. Verify expected tables exist.
+  2. Query current row counts and records.
+  3. Delete rows from `passenger_events`, `scenarios`, and `simulation_runs` while preserving schema.
+  4. Confirm row counts are reset.
+- Alternate or error flows:
+  - App is still running: a fresh `simulation_runs` row or new passenger events may appear immediately after restart.
+- Outcome: Database state is aligned with the visible simulation lifecycle.
 
 ## Functional Requirements
 
@@ -205,6 +237,11 @@ can extend in subsequent lab steps.
 | FR-023 | The repository README shall provide tutorial-style setup paths, prerequisites, validation commands, repository tour, and troubleshooting. | Must | Modeled on hands-on lab structure |
 | FR-024 | The repository shall include reusable Copilot prompts and skills for repeatable lab operations. | Should | Prompt and skill files under `.github/` |
 | FR-025 | The devcontainer shall provide optional PostgreSQL schema inspection support without making persistence mandatory. | Should | PostgreSQL sidecar, init SQL, and psql script |
+| FR-026 | When `DATABASE_URL` is set, the simulation shall write run metadata to `simulation_runs`. | Must | Optional persistence path |
+| FR-027 | When `DATABASE_URL` is set, passenger lifecycle events shall be written to `passenger_events`. | Must | Events: `created`, `assigned`, `boarded`, `exited` |
+| FR-028 | POST `/api/restart` shall clear PostgreSQL application tables before creating the fresh run row. | Must | Applies only when persistence is enabled |
+| FR-029 | The repository shall include prompt files for table reset, reset-on-restart, GitHub issue-type discovery, and Azure migration preparation. | Should | Prompts `02.05`, `02.06`, `03.00`, `04.00`, `04.01` |
+| FR-030 | Azure deployment conventions shall be captured in path-scoped instructions for `workspace/**`. | Should | `.github/instructions/azure-deployment.instructions.md` |
 
 ## Non-Functional Requirements
 
@@ -217,6 +254,8 @@ can extend in subsequent lab steps.
 | NFR-005 | Portability | Runs on Python 3.10+ with no OS-specific dependencies. | Windows, macOS, Linux |
 | NFR-006 | Onboarding | New participants can select a setup path and validate the environment from README instructions. | 15 minutes or less for Codespaces |
 | NFR-007 | Workshop repeatability | Setup and validation commands are scriptable and documented. | Commands work in Codespaces and devcontainer paths |
+| NFR-008 | Resilience | Database persistence must not block or crash the simulation when unavailable. | In-memory fallback |
+| NFR-009 | Operability | Database reset workflows preserve schema and constraints. | Delete rows, do not drop schema |
 
 ## User Experience Requirements
 
@@ -235,10 +274,11 @@ can extend in subsequent lab steps.
   PRDs for product intent, and `.github/` customizations for Copilot-driven workflows.
 - Setup states: Fresh Codespace, rebuilt devcontainer, manual local environment, database sidecar reachable, and database
   sidecar unavailable but app still runs in memory.
+- Database states: In-memory only, persistence enabled, tables reset manually, and tables reset via restart.
 
 ## Data Requirements
 
-- Entities: `Building`, `Elevator`, `Passenger`; optional PostgreSQL tables for future persistence labs.
+- Entities: `Building`, `Elevator`, `Passenger`; optional PostgreSQL tables for persistence and future analytics labs.
 - Required fields:
   - Passenger: `id`, `origin_floor`, `destination_floor`,
     `requested_tick`, `direction` (derived).
@@ -253,14 +293,17 @@ can extend in subsequent lab steps.
     `boarded_passenger_count`,
     `average_passenger_wait_time_seconds`,
     `wait_time_updated_tick`.
-- Data lifecycle: Core simulation state is in-memory and resets on server restart. PostgreSQL schema objects may exist in
-  the devcontainer for future persistence labs, but the current app must not depend on stored rows.
+- Data lifecycle: Core simulation state is in-memory and resets on server restart or `POST /api/restart`. PostgreSQL rows
+  are written only when `DATABASE_URL` is set. `POST /api/restart` removes rows from `passenger_events`, `scenarios`, and
+  `simulation_runs`, then prepares a fresh run row.
 - Validation: Floor numbers 1–5, origin ≠ destination.
 - Seed data: Elevators start at floors 1–4. No passengers
   at boot.
 - Optional PostgreSQL tables:
-  - `simulation_runs`: run-level metadata for future persistence.
-  - `passenger_events`: passenger lifecycle events for future analytics.
+  - `simulation_runs`: run-level metadata, dispatcher strategy, tick interval, spawn chance, movement totals, and wait
+    time aggregates.
+  - `passenger_events`: passenger lifecycle events (`created`, `assigned`, `boarded`, `exited`) with tick, elevator, and
+    floor values.
   - `scenarios`: named scenario rows for future replay labs.
 - Privacy: No PII collected.
 
@@ -273,14 +316,14 @@ can extend in subsequent lab steps.
   success, 400 on validation failure.
 - `POST /api/control` — Sets pause state
   (`{ paused: bool }`).
-- `POST /api/restart` — Resets all simulation state and
-  resumes ticking from 0. Returns the fresh snapshot.
+- `POST /api/restart` — Resets all simulation state and resumes ticking from 0. If persistence is enabled, clears
+  application table rows before creating the fresh run row. Returns the fresh snapshot.
 - `WS /ws` — Streams JSON building snapshots each tick.
 - Static assets mounted at `/static`.
 - Configuration: `tick_interval`, `spawn_chance`, and
   `max_ticks` are constructor parameters on
   `SimulationEngine`.
-- Optional devcontainer PostgreSQL sidecar for future persistence and schema inspection labs. The app must still run when
+- Optional devcontainer PostgreSQL sidecar for persistence, reset, and schema inspection labs. The app must still run when
   `DATABASE_URL` is absent.
 - Development tooling integrations: GitHub Copilot, GitHub CLI, Docker-in-Docker, PostgreSQL client, Azure CLI, azd,
   Terraform, Bicep, and MCP Inspector are supported by the Codespaces/devcontainer path.
@@ -304,7 +347,8 @@ starter app or make the baseline simulation harder to run.
 | Building | Floor queues, pending list, snapshots, wait-time aggregation | `simulation/building.py` |
 | Dispatcher | Nearest-compatible-cab heuristic, pending retry | `simulation/dispatcher.py` |
 | SimulationEngine | Tick loop, spawn, publish, async lock | `simulation/simulation.py` |
-| FastAPI server | Routes, validation, WebSocket, static mount | `api/server.py` |
+| Database helpers | Optional SQLAlchemy async engine, inserts, run completion, table reset | `api/database.py` |
+| FastAPI server | Routes, validation, database engine lifecycle, WebSocket, static mount | `api/server.py` |
 | Dashboard UI | HTML template, TypeScript source, CSS, served JS | `ui/` |
 | Tests | unittest suite for spawn, dispatch, metrics | `tests/` |
 | Devcontainer | Codespaces runtime, tooling features, app/Postgres Compose services | `.devcontainer/` |
@@ -351,6 +395,7 @@ Passenger
 ```text
 Server start
   → SimulationEngine created (4 elevators, 5 floors)
+  → Optional SQLAlchemy async engine created if DATABASE_URL is set
   → asyncio.create_task(engine.run())
 
 Each tick
@@ -367,14 +412,23 @@ Add passenger (manual)
   → engine.add_passenger() acquires lock
   → Passenger added to floor queue
   → Dispatcher assigns or queues
+  → Optional created/assigned passenger events are scheduled for PostgreSQL
   → Snapshot published
 
 Service a floor
   → Elevator opens doors (1 tick)
   → Drop off arriving passengers (passengers_moved++)
   → Board compatible waiting passengers
+  → Optional exited/boarded passenger events are scheduled for PostgreSQL
   → Record boarding wait time
   → Close doors, update direction
+
+Restart simulation
+  → POST /api/restart calls engine.restart()
+  → Optional PostgreSQL tables are cleared in dependency-safe order
+  → In-memory Building resets to initial state
+  → New run ID is generated and optional simulation_runs row is created
+  → Snapshot published
 ```
 
 ## Acceptance Criteria
@@ -408,14 +462,19 @@ Service a floor
 - [x] AC-010: Given the simulation has finished, when the
   user clicks "Restart simulation", then all state
   resets and ticking resumes from 0.
+- [x] AC-011: Given `DATABASE_URL` is configured, when passengers are created, assigned, boarded, or exited, then
+  matching rows are written to `passenger_events`.
+- [x] AC-012: Given `DATABASE_URL` is configured, when the user clicks "Restart simulation", then old persisted records
+  are removed and a fresh `simulation_runs` row is created.
+- [x] AC-013: Given `DATABASE_URL` is absent, when the simulation runs or restarts, then the app continues in memory
+  without database errors.
 
 ## Testing Strategy
 
-- Unit tests: Passenger spawn probability, dispatcher
-  assignment and queuing, `passengers_moved` counter,
-  average wait time refresh timing.
-- Integration tests: Not required for Lab 01 core behavior. Devcontainer/database labs should validate PostgreSQL
-  connectivity and schema inspection separately from simulation unit tests.
+- Unit tests: Passenger spawn probability, dispatcher assignment and queuing, `passengers_moved` counter, average wait
+  time refresh timing, database helper SQL parameters, table reset order, and restart persistence sequencing.
+- Integration tests: Devcontainer/database labs validate PostgreSQL connectivity, schema inspection, event writes, and
+  reset behavior separately from pure simulation unit tests.
 - Manual validation:
 
   ```bash
@@ -428,10 +487,24 @@ Service a floor
   python -m uvicorn api.server:app --reload
   ```
 
+  Run with PostgreSQL persistence enabled:
+
+  ```bash
+  DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch \
+  python -m uvicorn api.server:app --reload --port 7000
+  ```
+
   From the repository root, inspect the optional PostgreSQL schema:
 
   ```bash
   .github/skills/postgres-schema-inspection/scripts/inspect-postgres-schema.sh
+  ```
+
+  Confirm persisted event counts:
+
+  ```bash
+  PGPASSWORD=elevator psql -h postgres -U elevator -d elevator_dispatch \
+    -c "SELECT event_type, COUNT(*) FROM passenger_events GROUP BY event_type;"
   ```
 
 - Test data: Inline fixtures in test methods.
@@ -457,7 +530,8 @@ Service a floor
 | WebSocket disconnect during demo | Medium | Low | Client auto-reconnects; status message indicates state |
 | Devcontainer feature incompatibility breaks Codespaces rebuild | High | Medium | Prefer verified feature IDs; document Debian trixie Docker-in-Docker requirements |
 | Setup friction consumes workshop time | Medium | Medium | Provide Codespaces-first path, validation commands, and troubleshooting table |
-| Optional PostgreSQL schema is mistaken for required persistence | Medium | Medium | State clearly that baseline simulation remains in-memory |
+| Optional PostgreSQL persistence is mistaken for required baseline behavior | Medium | Medium | State clearly that baseline simulation remains in-memory |
+| Running app repopulates tables immediately after reset | Low | Medium | Document that restart creates a fresh run row and ticking can add events |
 
 ## Open Questions
 
@@ -478,6 +552,9 @@ Service a floor
 | 2026-05-11 | Codespaces-first setup documentation | Matches workshop delivery needs and minimizes local install friction | Facilitator |
 | 2026-05-11 | PostgreSQL sidecar remains optional | Enables future persistence labs while preserving the starter app's in-memory simplicity | Facilitator |
 | 2026-05-11 | Copilot assets are part of the lab surface | Prompts, skills, instructions, and agents teach repeatable agentic workflows | Facilitator |
+| 2026-05-12 | PostgreSQL event persistence is optional and tied to `DATABASE_URL` | Keeps baseline app simple while enabling analytics and inspection labs | Facilitator |
+| 2026-05-12 | Restart clears persisted application rows before creating a fresh run | Keeps database history aligned with the visible simulation lifecycle | Facilitator |
+| 2026-05-12 | Azure deployment guidance lives in scoped instructions and migration prompts | Prepares future Azure labs without changing starter runtime behavior | Facilitator |
 
 ## Implementation Plan
 
@@ -497,6 +574,10 @@ Service a floor
    browser check.
 9. Document tutorial-style setup paths, prerequisites, useful commands, repository tour, and troubleshooting.
 10. Add reusable Copilot prompts and skills for devcontainer setup and PostgreSQL schema inspection.
+11. Add optional database persistence helpers and simulation event hooks for `simulation_runs` and `passenger_events`.
+12. Add reset-all-tables and reset-on-restart workflows with unit coverage.
+13. Add GitHub issue-type discovery prompt and labels/issue taxonomy guidance.
+14. Add Azure deployment instructions and migration prompt scaffolding.
 
 ## Appendix
 
@@ -508,3 +589,11 @@ Service a floor
   `.github/copilot-instructions.md`
 - PostgreSQL schema inspection skill:
   `.github/skills/postgres-schema-inspection/SKILL.md`
+- PostgreSQL data persistence skill:
+  `.github/skills/postgres-data-persistence/SKILL.md`
+- Reset tables prompt:
+  `.github/prompts/02.05.reset-all-tables.prompt.md`
+- Reset tables on restart prompt:
+  `.github/prompts/02.06.reset-tables-upon-restart-simulation.prompt.md`
+- Azure deployment instructions:
+  `.github/instructions/azure-deployment.instructions.md`
