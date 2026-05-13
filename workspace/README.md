@@ -6,7 +6,7 @@ and validate changes with repeatable commands.
 
 ## What It Does
 
-The app simulates a 5-floor building with 4 elevators. A simple dispatcher assigns passengers to compatible elevators,
+The app simulates a 6-level building with 4 elevators: B1 plus floors 1 through 5. A simple dispatcher assigns passengers to compatible elevators,
 while a FastAPI backend streams live snapshots to a browser dashboard over WebSockets. When `DATABASE_URL` is set, the
 app also writes simulation run metadata and passenger lifecycle events to PostgreSQL.
 
@@ -111,6 +111,6 @@ Expected tables are `simulation_runs`, `passenger_events`, and `scenarios`. `sim
 ## Notes for the Lab
 
 - Keep live simulation state in memory; use PostgreSQL only for optional run and event persistence.
-- Preserve the 5-floor, 4-elevator default scenario.
+- Preserve the 6-level, 4-elevator default scenario: B1 plus floors 1 through 5.
 - Prefer small, explicit modules and teachable heuristics over clever abstractions.
 - When changing TypeScript source, run `npm run build` so `ui/static/main.js` stays current.

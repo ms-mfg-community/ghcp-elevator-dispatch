@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from simulation.building import Building
 from simulation.elevator import Elevator
+from simulation.floors import floor_distance
 from simulation.passenger import Passenger
 
 
@@ -18,7 +19,7 @@ class Dispatcher:
             score = self._score_elevator(elevator, passenger)
             if score is None:
                 continue
-            candidates.append((score, abs(elevator.current_floor - passenger.origin_floor), elevator.id, elevator))
+            candidates.append((score, floor_distance(elevator.current_floor, passenger.origin_floor), elevator.id, elevator))
 
         if not candidates:
             if has_capacity:
@@ -44,7 +45,7 @@ class Dispatcher:
             self.assign_passenger(building, passenger)
 
     def _score_elevator(self, elevator: Elevator, passenger: Passenger) -> int | None:
-        distance = abs(elevator.current_floor - passenger.origin_floor)
+        distance = floor_distance(elevator.current_floor, passenger.origin_floor)
         if elevator.direction == "idle":
             return distance
 

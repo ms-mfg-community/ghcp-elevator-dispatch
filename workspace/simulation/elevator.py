@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from simulation.floors import SUPPORTED_FLOORS, floor_distance
 from simulation.passenger import Passenger
 
 Direction = Literal["up", "down", "idle"]
@@ -18,6 +19,7 @@ class Elevator:
     capacity: int = 8
     passengers: list[Passenger] = field(default_factory=list)
     scheduled_stops: set[int] = field(default_factory=set)
+    allowed_floors: list[int] = field(default_factory=lambda: list(SUPPORTED_FLOORS))
     door_ticks_remaining: int = 0
     passengers_moved: int = 0
 
@@ -26,7 +28,7 @@ class Elevator:
         return self.capacity - len(self.passengers)
 
     def add_stop(self, floor: int) -> None:
-        if 1 <= floor <= 5:
+        if floor in self.allowed_floors:
             self.scheduled_stops.add(floor)
 
     def remove_stop(self, floor: int) -> None:
@@ -35,7 +37,7 @@ class Elevator:
     def next_target_floor(self) -> int | None:
         if not self.scheduled_stops:
             return None
-        return min(self.scheduled_stops, key=lambda floor: abs(floor - self.current_floor))
+        return min(self.scheduled_stops, key=lambda floor: floor_distance(self.current_floor, floor))
 
     def update_direction(self) -> None:
         target = self.next_target_floor()
@@ -92,4 +94,5 @@ class Elevator:
             "passengers_moved": self.passengers_moved,
             "passengers": [passenger.to_dict() for passenger in self.passengers],
             "scheduled_stops": sorted(self.scheduled_stops),
+            "allowed_floors": list(self.allowed_floors),
         }
