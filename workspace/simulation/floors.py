@@ -14,9 +14,14 @@ def floor_label(floor: int) -> str:
     return "B1" if floor == BASEMENT_FLOOR else f"Floor {floor}"
 
 
+def supported_floor_error() -> str:
+    labels = ", ".join(floor_label(floor) for floor in SUPPORTED_FLOORS)
+    return f"Floors must be one of: {labels}."
+
+
 def _floor_index(floor: int, name: str) -> int:
     if not is_supported_floor(floor):
-        raise ValueError(f"{name} must be B1 or between 1 and 5.")
+        raise ValueError(f"{name} is not supported. {supported_floor_error()}")
     return SUPPORTED_FLOORS.index(floor)
 
 

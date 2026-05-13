@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from itertools import count
 
-from simulation.floors import is_supported_floor
+from simulation.floors import is_supported_floor, supported_floor_error
 
 
 _PASSENGER_COUNTER = count(1)
@@ -19,7 +19,7 @@ class Passenger:
     def __post_init__(self) -> None:
         for floor in (self.origin_floor, self.destination_floor):
             if not is_supported_floor(floor):
-                raise ValueError("Floors must be B1 or between 1 and 5.")
+                raise ValueError(supported_floor_error())
         if self.origin_floor == self.destination_floor:
             raise ValueError("Origin and destination floors must differ.")
 

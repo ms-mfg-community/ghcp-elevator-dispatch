@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, field_validator
 
 from api.database import create_database_engine, dispose_database_engine
-from simulation.floors import is_supported_floor
+from simulation.floors import is_supported_floor, supported_floor_error
 from simulation.simulation import SimulationEngine
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +26,7 @@ class PassengerRequest(BaseModel):
     @classmethod
     def supported_floor(cls, value: int) -> int:
         if not is_supported_floor(value):
-            raise ValueError("Floors must be B1 or between 1 and 5.")
+            raise ValueError(supported_floor_error())
         return value
 
 
