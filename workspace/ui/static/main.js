@@ -9,6 +9,11 @@ const originSelect = document.querySelector("#origin-floor");
 const destinationSelect = document.querySelector("#destination-floor");
 const pauseToggle = document.querySelector("#pause-toggle");
 const restartToggle = document.querySelector("#restart-toggle");
+function floorPositionExpression(floor, floors) {
+    const lowestFloor = Math.min(...floors.map((floorState) => floorState.floor));
+    const floorOffset = floor - lowestFloor;
+    return `calc(${floorOffset} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
+}
 function populateFloorOptions() {
     if (!originSelect || !destinationSelect) {
         return;
@@ -69,6 +74,32 @@ function renderBuilding(snapshot) {
         return;
     }
     const floorCount = snapshot.floors.length;
+    const elevatorIds = snapshot.elevators.map((elevator) => elevator.id).join(",");
+    const floorIds = snapshot.floors.map((floorState) => String(floorState.floor)).join(",");
+    const frameKey = `${floorIds}|${elevatorIds}`;
+    if (buildingView.dataset.frameKey !== frameKey) {
+        buildingView.dataset.frameKey = frameKey;
+        buildingView.innerHTML = `
+            <div class="building-labels"></div>
+            <div class="shaft-grid"><div class="shaft-cells"></div></div>
+            <div class="floor-metadata"></div>
+        `;
+    }
+    buildingView.style.minHeight = `calc(${floorCount} * var(--floor-height))`;
+    const buildingLabels = buildingView.querySelector(".building-labels");
+    const shaftGrid = buildingView.querySelector(".shaft-grid");
+    const shaftCellsContainer = buildingView.querySelector(".shaft-cells");
+    const floorMetadataContainer = buildingView.querySelector(".floor-metadata");
+    if (!buildingLabels || !shaftGrid || !shaftCellsContainer || !floorMetadataContainer) {
+        return;
+    }
+    const rowTemplate = `repeat(${floorCount}, var(--floor-height))`;
+    buildingLabels.style.gridTemplateRows = rowTemplate;
+    shaftGrid.style.gridTemplateRows = rowTemplate;
+    shaftGrid.style.gridTemplateColumns = `repeat(${snapshot.elevators.length}, var(--shaft-width))`;
+    shaftGrid.style.width = `calc(${snapshot.elevators.length} * var(--shaft-width))`;
+    shaftCellsContainer.style.gridTemplateRows = rowTemplate;
+    shaftCellsContainer.style.gridTemplateColumns = `repeat(${snapshot.elevators.length}, var(--shaft-width))`;
     const floorLabels = snapshot.floors
         .map((floorState) => {
         return `
@@ -85,24 +116,25 @@ function renderBuilding(snapshot) {
     const floorMetadata = snapshot.floors
         .map((floorState) => renderFloorMetadata(floorState, snapshot.elevators))
         .join("");
-    buildingView.innerHTML = `
-        <div class="building-labels">${floorLabels}</div>
-        <div class="shaft-grid"><div class="shaft-cells">${shaftCells}</div></div>
-        <div class="floor-metadata">${floorMetadata}</div>
-    `;
-    const shaftGrid = buildingView.querySelector(".shaft-grid");
-    if (!shaftGrid) {
-        return;
-    }
+    buildingLabels.innerHTML = floorLabels;
+    shaftCellsContainer.innerHTML = shaftCells;
+    floorMetadataContainer.innerHTML = floorMetadata;
     snapshot.elevators.forEach((elevator, index) => {
-        const shaftTrack = document.createElement("div");
-        shaftTrack.className = "shaft-track";
+        let shaftTrack = shaftGrid.querySelector(`[data-elevator-id="${elevator.id}"]`);
+        let cab = shaftTrack?.querySelector(".elevator-cab");
+        if (!shaftTrack || !cab) {
+            shaftTrack = document.createElement("div");
+            shaftTrack.className = "shaft-track";
+            shaftTrack.dataset.elevatorId = elevator.id;
+            cab = document.createElement("div");
+            shaftTrack.append(cab);
+            shaftGrid.append(shaftTrack);
+        }
         shaftTrack.style.gridColumn = String(index + 1);
         shaftTrack.style.gridRow = `1 / ${floorCount + 1}`;
-        const cab = document.createElement("div");
         const cabColorClass = `cab-${elevator.id}`;
         cab.className = `elevator-cab ${cabColorClass} ${elevator.door_state === "open" ? "open" : ""}`.trim();
-        cab.style.bottom = `calc(${elevator.current_floor - 1} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
+        cab.style.bottom = floorPositionExpression(elevator.current_floor, snapshot.floors);
         cab.innerHTML = `
       <div class="cab-header">
         <strong>${elevator.id}</strong>
@@ -110,8 +142,6 @@ function renderBuilding(snapshot) {
       </div>
       <div class="passenger-dots">${renderCabPassengers(elevator.passengers)}</div>
     `;
-        shaftTrack.append(cab);
-        shaftGrid.append(shaftTrack);
     });
 }
 function renderMovementSummary(snapshot) {
@@ -180,7 +210,8 @@ function renderFinishedAlert(snapshot) {
     }
     alert.querySelector("#restart-button")?.addEventListener("click", async () => {
         try {
-            await postJson("/api/restart", {});
+            const snapshot = await postJson("/api/restart", {});
+            renderSnapshot(snapshot);
         }
         catch (error) {
             if (statusMessage) {
@@ -199,6 +230,22 @@ async function postJson(url, payload) {
         const errorBody = await response.json().catch(() => ({ detail: "Request failed." }));
         throw new Error(String(errorBody.detail ?? "Request failed."));
     }
+    return await response.json();
+}
+async function fetchInitialSnapshot() {
+    try {
+        const response = await fetch("/api/state");
+        if (!response.ok) {
+            throw new Error("Failed to load simulation state.");
+        }
+        const snapshot = await response.json();
+        renderSnapshot(snapshot);
+    }
+    catch (error) {
+        if (statusMessage) {
+            statusMessage.textContent = error instanceof Error ? error.message : "Failed to load simulation state.";
+        }
+    }
 }
 function connectWebSocket() {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
@@ -206,6 +253,11 @@ function connectWebSocket() {
     socket.addEventListener("message", (event) => {
         const snapshot = JSON.parse(event.data);
         renderSnapshot(snapshot);
+    });
+    socket.addEventListener("error", () => {
+        if (statusMessage) {
+            statusMessage.textContent = "Live updates disconnected. Retrying...";
+        }
     });
     socket.addEventListener("close", () => {
         window.setTimeout(connectWebSocket, 1000);
@@ -222,7 +274,8 @@ function bindControls() {
             destination_floor: Number(destinationSelect.value),
         };
         try {
-            await postJson("/api/passengers", payload);
+            const snapshot = await postJson("/api/passengers", payload);
+            renderSnapshot(snapshot);
         }
         catch (error) {
             if (statusMessage) {
@@ -233,7 +286,8 @@ function bindControls() {
     pauseToggle?.addEventListener("click", async () => {
         const paused = pauseToggle.textContent?.includes("Pause") ?? true;
         try {
-            await postJson("/api/control", { paused });
+            const snapshot = await postJson("/api/control", { paused });
+            renderSnapshot(snapshot);
         }
         catch (error) {
             if (statusMessage) {
@@ -243,7 +297,8 @@ function bindControls() {
     });
     restartToggle?.addEventListener("click", async () => {
         try {
-            await postJson("/api/restart", {});
+            const snapshot = await postJson("/api/restart", {});
+            renderSnapshot(snapshot);
         }
         catch (error) {
             if (statusMessage) {
@@ -254,4 +309,5 @@ function bindControls() {
 }
 populateFloorOptions();
 bindControls();
+void fetchInitialSnapshot();
 connectWebSocket();
