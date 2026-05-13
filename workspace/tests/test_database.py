@@ -2,7 +2,13 @@ import asyncio
 import unittest
 from uuid import uuid4
 
-from api.database import complete_simulation_run, insert_passenger_event, insert_simulation_run, reset_database_tables
+from api.database import (
+    complete_simulation_run,
+    ensure_database_schema,
+    insert_passenger_event,
+    insert_simulation_run,
+    reset_database_tables,
+)
 from simulation.passenger import Passenger
 from simulation.simulation import SimulationEngine
 
@@ -55,6 +61,25 @@ class DatabaseHelperTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(database_engine.connection.executions[0]["event_type"], "created")
         self.assertEqual(database_engine.connection.executions[0]["floor"], 3)
         self.assertEqual(database_engine.connection.executions[0]["elevator_id"], "ev-01")
+
+    async def test_insert_passenger_event_allows_basement_floor_parameter(self) -> None:
+        database_engine = FakeDatabaseEngine()
+        run_id = uuid4()
+
+        await insert_passenger_event(database_engine, run_id, 7, "psg-0001", "created", -1)
+
+        self.assertEqual(database_engine.connection.executions[0]["floor"], -1)
+
+    async def test_ensure_database_schema_allows_basement_constraints(self) -> None:
+        database_engine = FakeDatabaseEngine()
+
+        await ensure_database_schema(database_engine)
+
+        statements = "\n".join(database_engine.connection.statements)
+        self.assertIn("DROP CONSTRAINT IF EXISTS passenger_events_floor_check", statements)
+        self.assertIn("CHECK (floor IN (-1, 1, 2, 3, 4, 5))", statements)
+        self.assertIn("CHECK (origin_floor IN (-1, 1, 2, 3, 4, 5))", statements)
+        self.assertIn("CHECK (destination_floor IN (-1, 1, 2, 3, 4, 5))", statements)
 
     async def test_complete_simulation_run_updates_aggregate_fields(self) -> None:
         database_engine = FakeDatabaseEngine()

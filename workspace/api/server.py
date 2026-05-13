@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, field_validator
 
-from api.database import create_database_engine, dispose_database_engine
+from api.database import create_database_engine, dispose_database_engine, ensure_database_schema
 from simulation.floors import is_supported_floor, supported_floor_error
 from simulation.simulation import SimulationEngine
 
@@ -38,6 +38,7 @@ class ControlRequest(BaseModel):
 async def lifespan(application: FastAPI):
     database_engine = create_database_engine()
     application.state.database_engine = database_engine
+    await ensure_database_schema(database_engine)
     engine.set_database_engine(database_engine)
     task = asyncio.create_task(engine.run())
     try:

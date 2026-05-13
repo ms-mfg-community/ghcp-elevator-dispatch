@@ -1,6 +1,6 @@
 ---
-applyTo: workspace/**
-description: "Establish custom instructions for Azure deployments, including conventions, standards, proven practices, and supported deployment options."
+applyTo: "workspace/**"
+description: "Use when: planning, writing, or reviewing Azure deployments, IaC, container hosting, Azure PostgreSQL, Container Apps, App Service, or deployment documentation for this workspace."
 ---
 
 # Azure Deployment Instructions
@@ -14,6 +14,14 @@ Apply these instructions to Azure Infrastructure as Code, deployment automation,
 **When to use:** When writing or reviewing Bicep templates, Terraform modules, Azure CLI scripts, deployment prompts, Azure DevOps pipelines, or migration guidance.
 
 **When NOT to use:** For local development (use `copilot-instructions.md`), Python/TypeScript source code (use language-specific instructions), or non-Azure cloud platforms.
+
+## Repository-Specific Deployment Boundaries
+
+- Treat `workspace/` as the deployable application root unless a prompt explicitly asks for repository-level deployment assets.
+- Prefer a single container that serves the FastAPI app, static UI assets, and WebSocket endpoint together.
+- Keep `/api/state` and `/ws` reachable after deployment; do not choose hosting options that break the live dashboard unless the prompt explicitly changes the product shape.
+- Preserve the optional persistence model: no `DATABASE_URL` means in-memory simulation, and configured `DATABASE_URL` enables PostgreSQL event logging.
+- Keep generated IaC, scripts, and deployment docs small enough for workshop participants to read and modify.
 
 ---
 
@@ -29,7 +37,7 @@ Apply these instructions to Azure Infrastructure as Code, deployment automation,
 
 - Keep the in-memory simulation engine as the default; do not mandate database persistence.
 - Support optional PostgreSQL on **Azure Database for PostgreSQL** (single server or flexible server) for labs that add analytics or event logging.
-- Avoid unnecessary services (no Redis cache, no Service Bus, no Application Insights unless explicitly requested).
+- Avoid unnecessary services (no Redis cache or Service Bus unless explicitly requested). Application Insights and Log Analytics are optional for deployed environments and should stay out of the local starter path unless requested.
 
 ### 3. Configuration-Driven Deployment
 
@@ -332,11 +340,11 @@ Follow Azure naming standards and organizational conventions:
 
 | Option | Tier | Suitable For | Cost |
 | --- | --- | --- | --- |
-| **Flexible Server** | Single or HA (2 standbys) | Production workloads | $30–200/month |
-| **Single Server** | Standalone (deprecated) | Workshops, dev/test | $15–100/month |
-| **Azure Cosmos DB (PostgreSQL)** | Distributed | Multi-tenant, high concurrency | $60+/month |
+| **Flexible Server** | Single-zone or zone-redundant HA | Production, staging, and durable workshop demos | $30–200/month |
+| **Local Docker Postgres** | Devcontainer sidecar | Local development and workshop labs | Included in local environment |
+| **Azure Cosmos DB for PostgreSQL** | Distributed | Multi-tenant or high-concurrency analytics labs | $60+/month |
 
-**Recommendation:** Use **Flexible Server** single-node for production; **Single Server** for labs (if still available); development uses local Docker Postgres.
+**Recommendation:** Use **Flexible Server** single-zone for Azure deployments and local Docker Postgres for development. Do not choose deprecated Azure Database for PostgreSQL Single Server for new work.
 
 ---
 

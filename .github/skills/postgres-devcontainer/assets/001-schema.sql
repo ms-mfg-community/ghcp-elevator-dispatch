@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS passenger_events (
                       'created', 'assigned', 'boarded', 'exited'
                   )),
     elevator_id   TEXT,
-    floor         INTEGER NOT NULL CHECK (floor BETWEEN 1 AND 5),
+    floor         INTEGER NOT NULL CHECK (floor IN (-1, 1, 2, 3, 4, 5)),
     recorded_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -34,6 +34,6 @@ CREATE TABLE IF NOT EXISTS scenarios (
     scenario_id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name          TEXT NOT NULL,
     tick          INTEGER NOT NULL,
-    origin_floor  INTEGER NOT NULL CHECK (origin_floor BETWEEN 1 AND 5),
-    destination_floor INTEGER NOT NULL CHECK (destination_floor BETWEEN 1 AND 5)
+    origin_floor  INTEGER NOT NULL CHECK (origin_floor IN (-1, 1, 2, 3, 4, 5)),
+    destination_floor INTEGER NOT NULL CHECK (destination_floor IN (-1, 1, 2, 3, 4, 5))
 );

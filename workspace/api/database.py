@@ -31,6 +31,43 @@ async def dispose_database_engine(database_engine: Any | None) -> None:
         await database_engine.dispose()
 
 
+async def ensure_database_schema(database_engine: Any | None) -> None:
+    if database_engine is None:
+        return
+
+    async with database_engine.begin() as connection:
+        await connection.execute(_sql("ALTER TABLE passenger_events DROP CONSTRAINT IF EXISTS passenger_events_floor_check"))
+        await connection.execute(
+            _sql(
+                """
+                ALTER TABLE passenger_events
+                ADD CONSTRAINT passenger_events_floor_check
+                CHECK (floor IN (-1, 1, 2, 3, 4, 5))
+                """
+            )
+        )
+        await connection.execute(_sql("ALTER TABLE scenarios DROP CONSTRAINT IF EXISTS scenarios_origin_floor_check"))
+        await connection.execute(
+            _sql(
+                """
+                ALTER TABLE scenarios
+                ADD CONSTRAINT scenarios_origin_floor_check
+                CHECK (origin_floor IN (-1, 1, 2, 3, 4, 5))
+                """
+            )
+        )
+        await connection.execute(_sql("ALTER TABLE scenarios DROP CONSTRAINT IF EXISTS scenarios_destination_floor_check"))
+        await connection.execute(
+            _sql(
+                """
+                ALTER TABLE scenarios
+                ADD CONSTRAINT scenarios_destination_floor_check
+                CHECK (destination_floor IN (-1, 1, 2, 3, 4, 5))
+                """
+            )
+        )
+
+
 async def insert_simulation_run(
     database_engine: Any | None,
     run_id: UUID,

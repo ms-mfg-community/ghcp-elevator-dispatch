@@ -9,19 +9,17 @@ const originSelect = document.querySelector("#origin-floor");
 const destinationSelect = document.querySelector("#destination-floor");
 const pauseToggle = document.querySelector("#pause-toggle");
 const restartToggle = document.querySelector("#restart-toggle");
-<<<<<<< HEAD
-function floorPositionExpression(floor, floors) {
-    const lowestFloor = Math.min(...floors.map((floorState) => floorState.floor));
-    const floorOffset = floor - lowestFloor;
-    return `calc(${floorOffset} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
-=======
 const supportedFloors = [-1, 1, 2, 3, 4, 5];
 function formatFloor(floor) {
     return floor === -1 ? "B1" : `Floor ${floor}`;
 }
 function displayFloorLabel(floorState) {
     return floorState.label || formatFloor(floorState.floor);
->>>>>>> 341321bab19cd40b45db6bfdf73fc1b83c866d6e
+}
+function floorPositionExpression(floor, floors) {
+    const floorRowIndex = floors.findIndex((floorState) => floorState.floor === floor);
+    const floorBottomIndex = floorRowIndex >= 0 ? floors.length - 1 - floorRowIndex : 0;
+    return `calc(${floorBottomIndex} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
 }
 function populateFloorOptions() {
     if (!originSelect || !destinationSelect) {
@@ -86,7 +84,6 @@ function renderBuilding(snapshot) {
         return;
     }
     const floorCount = snapshot.floors.length;
-<<<<<<< HEAD
     const elevatorIds = snapshot.elevators.map((elevator) => elevator.id).join(",");
     const floorIds = snapshot.floors.map((floorState) => String(floorState.floor)).join(",");
     const frameKey = `${floorIds}|${elevatorIds}`;
@@ -106,6 +103,7 @@ function renderBuilding(snapshot) {
     if (!buildingLabels || !shaftGrid || !shaftCellsContainer || !floorMetadataContainer) {
         return;
     }
+    buildingView.style.setProperty("--floor-count", String(floorCount));
     const rowTemplate = `repeat(${floorCount}, var(--floor-height))`;
     buildingLabels.style.gridTemplateRows = rowTemplate;
     shaftGrid.style.gridTemplateRows = rowTemplate;
@@ -113,9 +111,6 @@ function renderBuilding(snapshot) {
     shaftGrid.style.width = `calc(${snapshot.elevators.length} * var(--shaft-width))`;
     shaftCellsContainer.style.gridTemplateRows = rowTemplate;
     shaftCellsContainer.style.gridTemplateColumns = `repeat(${snapshot.elevators.length}, var(--shaft-width))`;
-=======
-    buildingView.style.setProperty("--floor-count", String(floorCount));
->>>>>>> 341321bab19cd40b45db6bfdf73fc1b83c866d6e
     const floorLabels = snapshot.floors
         .map((floorState) => {
         const basementClass = floorState.floor === -1 ? " basement-floor" : "";
@@ -154,13 +149,7 @@ function renderBuilding(snapshot) {
         shaftTrack.style.gridRow = `1 / ${floorCount + 1}`;
         const cabColorClass = `cab-${elevator.id}`;
         cab.className = `elevator-cab ${cabColorClass} ${elevator.door_state === "open" ? "open" : ""}`.trim();
-<<<<<<< HEAD
         cab.style.bottom = floorPositionExpression(elevator.current_floor, snapshot.floors);
-=======
-        const floorRowIndex = snapshot.floors.findIndex((floorState) => floorState.floor === elevator.current_floor);
-        const floorBottomIndex = floorRowIndex >= 0 ? floorCount - 1 - floorRowIndex : 0;
-        cab.style.bottom = `calc(${floorBottomIndex} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
->>>>>>> 341321bab19cd40b45db6bfdf73fc1b83c866d6e
         cab.innerHTML = `
       <div class="cab-header">
         <strong>${elevator.id}</strong>
