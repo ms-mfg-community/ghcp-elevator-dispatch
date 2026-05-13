@@ -59,7 +59,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.mount("/static", StaticFiles(directory=BASE_DIR / "ui" / "static"), name="static")
+app.mount("/static", StaticFiles(directory=BASE_DIR /
+          "ui" / "static"), name="static")
 
 
 @app.get("/")
@@ -75,7 +76,8 @@ async def get_state() -> dict[str, object]:
 @app.post("/api/passengers", status_code=201)
 async def create_passenger(payload: PassengerRequest) -> dict[str, object]:
     if payload.origin_floor == payload.destination_floor:
-        raise HTTPException(status_code=400, detail="Origin and destination floors must differ.")
+        raise HTTPException(
+            status_code=400, detail="Origin and destination floors must differ.")
     return await engine.add_passenger(payload.origin_floor, payload.destination_floor)
 
 
