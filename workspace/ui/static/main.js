@@ -24,16 +24,21 @@ function visualFloorRank(floor) {
 function sortFloorsForDisplay(floors) {
     return [...floors].sort((left, right) => visualFloorRank(left.floor) - visualFloorRank(right.floor));
 }
+function lengthMultipleExpression(lengthExpression, count) {
+    if (count <= 0) {
+        return "0px";
+    }
+    return `calc(${Array.from({ length: count }, () => lengthExpression).join(" + ")})`;
+}
 function floorPositionExpression(floor, floors) {
     const floorRowIndex = floors.findIndex((floorState) => floorState.floor === floor);
     const floorBottomIndex = floorRowIndex >= 0 ? floors.length - 1 - floorRowIndex : 0;
-    return `clamp(0px, calc(${floorBottomIndex} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2), calc(var(--floor-count) * var(--floor-height) - var(--cab-size)))`;
+    const floorOffset = lengthMultipleExpression("var(--floor-height)", floorBottomIndex);
+    const maxOffset = lengthMultipleExpression("var(--floor-height)", floors.length);
+    return `clamp(0px, calc(${floorOffset} + (var(--floor-height) - var(--cab-size)) / 2), calc(${maxOffset} - var(--cab-size)))`;
 }
 function shaftOffsetExpression(index) {
-    if (index === 0) {
-        return "0px";
-    }
-    return `calc(${Array.from({ length: index }, () => "var(--shaft-width)").join(" + ")})`;
+    return lengthMultipleExpression("var(--shaft-width)", index);
 }
 function populateFloorOptions() {
     if (!originSelect || !destinationSelect) {

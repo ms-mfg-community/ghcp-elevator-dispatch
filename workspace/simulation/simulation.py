@@ -15,7 +15,7 @@ from api.database import (
 from simulation.building import Building
 from simulation.dispatcher import Dispatcher
 from simulation.elevator import Elevator
-from simulation.floors import next_floor_toward
+from simulation.floors import floor_label, next_floor_toward
 from simulation.passenger import Passenger
 
 # Probability that a new passenger appears on any given tick (0.0–1.0).
@@ -92,10 +92,13 @@ class SimulationEngine:
                 requested_tick=self.building.tick,
             )
             self.building.add_passenger(passenger)
-            selected_elevator_id = self.dispatcher.assign_passenger(self.building, passenger)
-            self._record_passenger_event(passenger, "created", passenger.origin_floor)
+            selected_elevator_id = self.dispatcher.assign_passenger(
+                self.building, passenger)
+            self._record_passenger_event(
+                passenger, "created", passenger.origin_floor)
             if selected_elevator_id is not None:
-                self._record_passenger_event(passenger, "assigned", passenger.origin_floor, selected_elevator_id)
+                self._record_passenger_event(
+                    passenger, "assigned", passenger.origin_floor, selected_elevator_id)
             snapshot = self.building.snapshot()
         await self.publish(snapshot)
         return snapshot
@@ -206,16 +209,18 @@ class SimulationEngine:
         elevator.update_direction()
 
         for passenger in exiting:
-            self._record_passenger_event(passenger, "exited", elevator.current_floor, elevator.id)
+            self._record_passenger_event(
+                passenger, "exited", elevator.current_floor, elevator.id)
 
         for passenger in boarded:
-            self._record_passenger_event(passenger, "boarded", elevator.current_floor, elevator.id)
+            self._record_passenger_event(
+                passenger, "boarded", elevator.current_floor, elevator.id)
 
         if exiting or boarded:
             exited_count = len(exiting)
             boarded_count = len(boarded)
             self.building.status_message = (
-                f"{elevator.id} serviced floor {elevator.current_floor}: "
+                f"{elevator.id} serviced {floor_label(elevator.current_floor)}: "
                 f"{exited_count} exited, {boarded_count} boarded."
             )
 
@@ -227,15 +232,20 @@ class SimulationEngine:
         destination = random.choice(
             [floor for floor in self.building.accessible_floors if floor != origin]
         )
-        passenger = Passenger(origin_floor=origin, destination_floor=destination, requested_tick=self.building.tick)
+        passenger = Passenger(
+            origin_floor=origin, destination_floor=destination, requested_tick=self.building.tick)
         self.building.add_passenger(passenger)
-        selected_elevator_id = self.dispatcher.assign_passenger(self.building, passenger)
-        self._record_passenger_event(passenger, "created", passenger.origin_floor)
+        selected_elevator_id = self.dispatcher.assign_passenger(
+            self.building, passenger)
+        self._record_passenger_event(
+            passenger, "created", passenger.origin_floor)
         if selected_elevator_id is not None:
-            self._record_passenger_event(passenger, "assigned", passenger.origin_floor, selected_elevator_id)
+            self._record_passenger_event(
+                passenger, "assigned", passenger.origin_floor, selected_elevator_id)
 
     def _maybe_refresh_average_wait_time(self) -> None:
-        update_ticks = max(1, round(WAIT_TIME_UPDATE_SECONDS / self.tick_interval))
+        update_ticks = max(
+            1, round(WAIT_TIME_UPDATE_SECONDS / self.tick_interval))
         if self.building.tick - self.building.wait_time_updated_tick >= update_ticks:
             self.building.refresh_average_wait_time()
 
@@ -263,7 +273,8 @@ class SimulationEngine:
             return
 
         self._run_completed = True
-        total_passengers_moved = sum(elevator.passengers_moved for elevator in self.building.elevators)
+        total_passengers_moved = sum(
+            elevator.passengers_moved for elevator in self.building.elevators)
         await complete_simulation_run(
             self.database_engine,
             self.run_id,
