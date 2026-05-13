@@ -68,6 +68,13 @@ function renderBuilding(snapshot) {
     if (!buildingView) {
         return;
     }
+    const previousCabPositions = new Map();
+    buildingView.querySelectorAll(".elevator-cab[data-elevator-id]").forEach((cab) => {
+        const elevatorId = cab.dataset.elevatorId;
+        if (elevatorId) {
+            previousCabPositions.set(elevatorId, window.getComputedStyle(cab).bottom);
+        }
+    });
     const floorCount = snapshot.floors.length;
     const floorLabels = snapshot.floors
         .map((floorState) => {
@@ -102,7 +109,9 @@ function renderBuilding(snapshot) {
         const cab = document.createElement("div");
         const cabColorClass = `cab-${elevator.id}`;
         cab.className = `elevator-cab ${cabColorClass} ${elevator.door_state === "open" ? "open" : ""}`.trim();
-        cab.style.bottom = `calc(${elevator.current_floor - 1} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
+        cab.dataset.elevatorId = elevator.id;
+        const targetBottom = `calc(${elevator.current_floor - 1} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
+        cab.style.bottom = previousCabPositions.get(elevator.id) ?? targetBottom;
         cab.innerHTML = `
       <div class="cab-header">
         <strong>${elevator.id}</strong>
@@ -112,6 +121,11 @@ function renderBuilding(snapshot) {
     `;
         shaftTrack.append(cab);
         shaftGrid.append(shaftTrack);
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+                cab.style.bottom = targetBottom;
+            });
+        });
     });
 }
 function renderMovementSummary(snapshot) {
