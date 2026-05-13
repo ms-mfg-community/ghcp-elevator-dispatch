@@ -44,7 +44,7 @@
             "version": "latest"
         }
     },
-    "postCreateCommand": "cd workspace && python -m venv .venv && . .venv/bin/activate && python -m pip install -r requirements.txt && npm install && az bicep install && sudo npm install -g @modelcontextprotocol/inspector",
+    "postCreateCommand": "cd workspace && python -m venv .venv && . .venv/bin/activate && python -m pip install -r requirements.txt && npm install && az bicep install && sudo npm install -g @modelcontextprotocol/inspector && gh extension install github/gh-copilot",
     "customizations": {
         "vscode": {
             "extensions": [
