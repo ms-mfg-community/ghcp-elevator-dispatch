@@ -10,11 +10,19 @@ const destinationSelect = document.querySelector("#destination-floor");
 const pauseToggle = document.querySelector("#pause-toggle");
 const restartToggle = document.querySelector("#restart-toggle");
 const supportedFloors = [-1, 1, 2, 3, 4, 5];
+const displayFloors = [5, 4, 3, 2, 1, -1];
 function formatFloor(floor) {
     return floor === -1 ? "B1" : `Floor ${floor}`;
 }
 function displayFloorLabel(floorState) {
-    return floorState.label || formatFloor(floorState.floor);
+    return floorState.floor === -1 ? "B1" : floorState.label || formatFloor(floorState.floor);
+}
+function visualFloorRank(floor) {
+    const rank = displayFloors.indexOf(floor);
+    return rank >= 0 ? rank : displayFloors.length;
+}
+function sortFloorsForDisplay(floors) {
+    return [...floors].sort((left, right) => visualFloorRank(left.floor) - visualFloorRank(right.floor));
 }
 function floorPositionExpression(floor, floors) {
     const floorRowIndex = floors.findIndex((floorState) => floorState.floor === floor);
@@ -83,9 +91,10 @@ function renderBuilding(snapshot) {
     if (!buildingView) {
         return;
     }
-    const floorCount = snapshot.floors.length;
+    const floors = sortFloorsForDisplay(snapshot.floors);
+    const floorCount = floors.length;
     const elevatorIds = snapshot.elevators.map((elevator) => elevator.id).join(",");
-    const floorIds = snapshot.floors.map((floorState) => String(floorState.floor)).join(",");
+    const floorIds = floors.map((floorState) => String(floorState.floor)).join(",");
     const frameKey = `${floorIds}|${elevatorIds}`;
     if (buildingView.dataset.frameKey !== frameKey) {
         buildingView.dataset.frameKey = frameKey;
@@ -111,7 +120,7 @@ function renderBuilding(snapshot) {
     shaftGrid.style.width = `calc(${snapshot.elevators.length} * var(--shaft-width))`;
     shaftCellsContainer.style.gridTemplateRows = rowTemplate;
     shaftCellsContainer.style.gridTemplateColumns = `repeat(${snapshot.elevators.length}, var(--shaft-width))`;
-    const floorLabels = snapshot.floors
+    const floorLabels = floors
         .map((floorState) => {
         const basementClass = floorState.floor === -1 ? " basement-floor" : "";
         return `
@@ -122,13 +131,13 @@ function renderBuilding(snapshot) {
             `;
     })
         .join("");
-    const shaftCells = snapshot.floors
+    const shaftCells = floors
         .flatMap((floorState) => {
         const basementClass = floorState.floor === -1 ? " basement-floor" : "";
         return snapshot.elevators.map(() => `<div class="shaft-cell${basementClass}"></div>`);
     })
         .join("");
-    const floorMetadata = snapshot.floors
+    const floorMetadata = floors
         .map((floorState) => renderFloorMetadata(floorState, snapshot.elevators))
         .join("");
     buildingLabels.innerHTML = floorLabels;
@@ -149,7 +158,7 @@ function renderBuilding(snapshot) {
         shaftTrack.style.gridRow = `1 / ${floorCount + 1}`;
         const cabColorClass = `cab-${elevator.id}`;
         cab.className = `elevator-cab ${cabColorClass} ${elevator.door_state === "open" ? "open" : ""}`.trim();
-        cab.style.bottom = floorPositionExpression(elevator.current_floor, snapshot.floors);
+        cab.style.bottom = floorPositionExpression(elevator.current_floor, floors);
         cab.innerHTML = `
       <div class="cab-header">
         <strong>${elevator.id}</strong>

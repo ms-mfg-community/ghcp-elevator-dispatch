@@ -184,6 +184,7 @@ button:hover {
     position: relative;
     grid-template-columns: repeat(4, var(--shaft-width));
     width: calc(4 * var(--shaft-width));
+    height: calc(var(--floor-count, 6) * var(--floor-height));
     border: 2px dotted rgba(27, 36, 48, 0.46);
     background: rgba(255, 255, 255, 0.22);
 }
@@ -235,6 +236,7 @@ button:hover {
     position: relative;
     grid-row: 1 / -1;
     z-index: 2;
+    min-height: calc(var(--floor-count, 6) * var(--floor-height));
     pointer-events: none;
 }
 
