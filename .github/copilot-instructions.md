@@ -9,15 +9,22 @@ This repository is a workshop project for an elevator dispatch simulation. Keep 
 - The simulation domain model lives in `workspace/simulation/`.
 - Browser UI files live in `workspace/ui/`; `workspace/ui/templates/index.html` serves the page and `workspace/ui/static/` contains served assets.
 - Tests live in `workspace/tests/` and use the Python standard library `unittest` framework.
+- Reusable workshop prompts live in `.github/prompts/`, and task-specific implementation guidance lives in `.github/skills/`.
+- Keep repository-level lab assets, PRDs, prompts, skills, and setup files outside `workspace/` unless the requested
+  change is application code.
 
 ## Architecture Guidelines
 
-- Keep simulation state in memory. Do not add a database, authentication system, queue service, or persistent storage unless the user asks.
+- Keep live simulation state in memory. PostgreSQL support is optional and should only persist run metadata and passenger
+  events when `DATABASE_URL` is configured.
+- Do not add authentication, queues, external services, or mandatory persistent storage unless the user asks.
 - Preserve the educational starter-project style: small modules, clear names, explicit state transitions, and simple heuristics that are easy to explain in a workshop.
 - Keep dispatch behavior isolated in `workspace/simulation/dispatcher.py` and simulation tick/lifecycle behavior in `workspace/simulation/simulation.py`.
 - Keep API request validation in `workspace/api/server.py` using Pydantic models and FastAPI route handlers.
 - Maintain the 5-floor, 4-elevator default scenario unless a prompt explicitly changes those requirements.
 - Use straightforward scheduling heuristics; do not introduce ML or optimization libraries for dispatch logic.
+- When a prompt references a repository skill, read and follow that skill's `SKILL.md` and referenced assets before
+  editing files.
 
 ## Python Conventions
 
