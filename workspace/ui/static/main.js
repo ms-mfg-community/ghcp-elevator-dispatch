@@ -27,7 +27,13 @@ function sortFloorsForDisplay(floors) {
 function floorPositionExpression(floor, floors) {
     const floorRowIndex = floors.findIndex((floorState) => floorState.floor === floor);
     const floorBottomIndex = floorRowIndex >= 0 ? floors.length - 1 - floorRowIndex : 0;
-    return `calc(${floorBottomIndex} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2)`;
+    return `clamp(0px, calc(${floorBottomIndex} * var(--floor-height) + (var(--floor-height) - var(--cab-size)) / 2), calc(var(--floor-count) * var(--floor-height) - var(--cab-size)))`;
+}
+function shaftOffsetExpression(index) {
+    if (index === 0) {
+        return "0px";
+    }
+    return `calc(${Array.from({ length: index }, () => "var(--shaft-width)").join(" + ")})`;
 }
 function populateFloorOptions() {
     if (!originSelect || !destinationSelect) {
@@ -154,8 +160,9 @@ function renderBuilding(snapshot) {
             shaftTrack.append(cab);
             shaftGrid.append(shaftTrack);
         }
-        shaftTrack.style.gridColumn = String(index + 1);
-        shaftTrack.style.gridRow = `1 / ${floorCount + 1}`;
+        shaftTrack.style.gridColumn = "";
+        shaftTrack.style.gridRow = "";
+        shaftTrack.style.left = shaftOffsetExpression(index);
         const cabColorClass = `cab-${elevator.id}`;
         cab.className = `elevator-cab ${cabColorClass} ${elevator.door_state === "open" ? "open" : ""}`.trim();
         cab.style.bottom = floorPositionExpression(elevator.current_floor, floors);
