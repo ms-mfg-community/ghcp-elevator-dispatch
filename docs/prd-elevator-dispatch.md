@@ -7,13 +7,14 @@
 - Stakeholders: Workshop participants, facilitator
 - Status: Approved
 - Created: 2026-05-09
-- Last updated: 2026-05-12
+- Last updated: 2026-05-13
 - Target release or lab milestone: Labs 01-04 complete; Labs 02.03-02.06 persistence and reset workflows; Lab 03.01 PR
-  review prompts; Azure migration preparation
+  review prompts; Azure migration preparation and Container Apps deployment validation
 
 ## Summary
 
-Build an elevator dispatch simulation for a 5-floor, 4-elevator building, exposed through a FastAPI backend and
+Build an elevator dispatch simulation for a 6-level, 4-elevator building (B1 plus floors 1-5), exposed through a
+FastAPI backend and
 visualized in a real-time browser dashboard. The live simulation state remains in memory, while an optional PostgreSQL
 persistence path records simulation runs and passenger lifecycle events when `DATABASE_URL` is configured. The project
 serves as a hands-on workshop starter that teaches modular Python design, state management, async WebSocket
@@ -89,7 +90,7 @@ can extend in subsequent lab steps.
 
 ## Goals
 
-- Provide a running 5-floor, 4-elevator simulation out of the box through Codespaces or a documented local setup path.
+- Provide a running 6-level, 4-elevator simulation out of the box through Codespaces or a documented local setup path.
 - Render a live building view with animated elevator cabs,
   passenger dots, floor-level metadata, per-cab movement
   totals, and average passenger wait time.
@@ -115,6 +116,7 @@ can extend in subsequent lab steps.
 - Mobile-native or framework-based (React, Vue) UI.
 - Multi-building or multi-tenant support.
 - Implementing production cloud deployment, secret management, or enterprise identity integration in the starter app.
+  Workshop Azure deployment assets may exist for demonstration, but they are not intended as a production baseline.
 
 ## Users and Personas
 
@@ -227,7 +229,7 @@ can extend in subsequent lab steps.
 - Main flow:
   1. Create a feature branch for the cab color change.
   2. Update the targeted `.elevator-cab.cab-ev-*` selector in `workspace/ui/static/styles.css`.
-  3. Run focused validation such as `npm run build`, `python -m compileall .`, and `python -m unittest discover -s tests -v`.
+  3. Run focused validation such as `npm run build`, `python -m compileall .`, and the unit test suite.
   4. Push the branch and open a pull request into `main`.
   5. Invoke the GitHub Copilot Review agent with the corresponding `03.01` prompt.
 - Alternate or error flows:
@@ -239,7 +241,7 @@ can extend in subsequent lab steps.
 
 | ID | Requirement | Priority | Notes |
 | --- | --- | --- | --- |
-| FR-001 | The building shall have exactly 5 floors (1–5). | Must | Hardcoded default |
+| FR-001 | The building shall have exactly 6 accessible levels: B1 plus floors 1–5. | Must | B1 is stored as floor -1 |
 | FR-002 | The building shall have exactly 4 elevators (ev-01 through ev-04). | Must | Default start floors: 1, 2, 3, 4 |
 | FR-003 | Each elevator shall have a max capacity of 8 passengers. | Must | |
 | FR-004 | Each elevator shall move at most one floor per simulation tick. | Must | |
@@ -248,7 +250,7 @@ can extend in subsequent lab steps.
 | FR-007 | If no compatible elevator exists, the passenger shall be queued until one becomes available. | Must | Pending passenger list in Building |
 | FR-008 | Passengers shall spawn randomly each tick based on a configurable spawn chance (default 0.3). | Must | |
 | FR-009 | Users shall be able to add passengers manually via an API endpoint and the UI form. | Must | POST `/api/passengers` |
-| FR-010 | The API shall validate that origin ≠ destination and both floors are 1–5. | Must | Returns 400 on invalid input |
+| FR-010 | The API shall validate that origin ≠ destination and both floors are B1 or floors 1–5. | Must | B1 is submitted as floor -1; returns 400 on invalid input |
 | FR-011 | The simulation shall expose a WebSocket at `/ws` that streams building snapshots. | Must | |
 | FR-012 | The UI shall render a live building view with elevator cabs and passenger dots. | Must | |
 | FR-013 | Each elevator shall track a `passengers_moved` counter incremented on drop-off. | Must | |
@@ -272,6 +274,7 @@ can extend in subsequent lab steps.
 | FR-031 | The repository shall include GitHub Copilot Review-agent prompts that require a branch, focused change, pull request, and scoped review criteria. | Should | Cab color prompt variants under `03.01` |
 | FR-032 | The repository documentation shall explain the `completed/` folder as an excluded facilitator reference solution for rebuild labs. | Should | Do not treat as Copilot source context |
 | FR-033 | The live dashboard shall render elevator cab `ev-04` with a pink fill color. | Must | Verify the `.elevator-cab.cab-ev-04` style in the served UI |
+| FR-034 | Azure deployment documentation shall capture tenant-specific MFA, `azd`, Container Apps, and PostgreSQL extension gotchas found during validation. | Should | Includes `pgcrypto` avoidance, `azd auth login`, ACR endpoint outputs, revision health, and endpoint smoke tests |
 
 ## Non-Functional Requirements
 
@@ -286,6 +289,7 @@ can extend in subsequent lab steps.
 | NFR-007 | Workshop repeatability | Setup and validation commands are scriptable and documented. | Commands work in Codespaces and devcontainer paths |
 | NFR-008 | Resilience | Database persistence must not block or crash the simulation when unavailable. | In-memory fallback |
 | NFR-009 | Operability | Database reset workflows preserve schema and constraints. | Delete rows, do not drop schema |
+| NFR-010 | Cloud portability | Optional PostgreSQL persistence avoids non-allow-listed PostgreSQL extensions. | No required `pgcrypto` or `gen_random_uuid()` dependency |
 
 ## User Experience Requirements
 
@@ -329,7 +333,7 @@ can extend in subsequent lab steps.
 - Data lifecycle: Core simulation state is in-memory and resets on server restart or `POST /api/restart`. PostgreSQL rows
   are written only when `DATABASE_URL` is set. `POST /api/restart` removes rows from `passenger_events`, `scenarios`, and
   `simulation_runs`, then prepares a fresh run row.
-- Validation: Floor numbers 1–5, origin ≠ destination.
+- Validation: Floor numbers -1 and 1–5, origin ≠ destination. Floor 0 is invalid; floor -1 is displayed as B1.
 - Seed data: Elevators start at floors 1–4. No passengers
   at boot.
 - Optional PostgreSQL tables:
@@ -338,6 +342,8 @@ can extend in subsequent lab steps.
   - `passenger_events`: passenger lifecycle events (`created`, `assigned`, `boarded`, `exited`) with tick, elevator, and
     floor values.
   - `scenarios`: named scenario rows for future replay labs.
+- UUID values for persisted rows are generated by application code. The schema must not require `pgcrypto` or
+  `gen_random_uuid()` because Azure Database for PostgreSQL Flexible Server can reject non-allow-listed extensions.
 - Privacy: No PII collected.
 
 ## API and Integration Requirements
@@ -360,10 +366,13 @@ can extend in subsequent lab steps.
   `DATABASE_URL` is absent.
 - Development tooling integrations: GitHub Copilot, GitHub CLI, Docker-in-Docker, PostgreSQL client, Azure CLI, azd,
   Terraform, Bicep, and MCP Inspector are supported by the Codespaces/devcontainer path.
+- Azure Container Apps deployment validation uses `GET /`, `GET /api/state`, WebSocket `/ws`, revision-health checks,
+  and bounded console-log inspection. `HEAD /` is not a valid dashboard smoke test because the route supports `GET`.
 
 ## Technical Approach
 
-Keep simulation logic in `workspace/simulation/`, API logic in `workspace/api/`, UI files in `workspace/ui/`, and tests in
+Keep simulation logic in `workspace/simulation/`, API logic in `workspace/api/`, UI files in `workspace/ui/`, and
+tests in
 `workspace/tests/`. All core runtime state lives in memory inside a single `SimulationEngine` instance protected by an
 asyncio lock.
 
@@ -398,6 +407,7 @@ runtime checks rather than comparing directly against hidden completed files.
 ```text
 Building
 ├── floor_count: int = 5
+├── basement_floor: int = -1
 ├── elevators: list[Elevator]  (4 cabs)
 ├── waiting_passengers: dict[int, list[Passenger]]
 ├── pending_passengers: list[Passenger]
@@ -432,7 +442,7 @@ Passenger
 
 ```text
 Server start
-  → SimulationEngine created (4 elevators, 5 floors)
+  → SimulationEngine created (4 elevators, 6 accessible levels)
   → Optional SQLAlchemy async engine created if DATABASE_URL is set
   → asyncio.create_task(engine.run())
 
@@ -472,7 +482,7 @@ Restart simulation
 ## Acceptance Criteria
 
 - [x] AC-001: Given a fresh server start, when a user
-  opens `/`, then the dashboard renders 5 floor rows and
+  opens `/`, then the dashboard renders 6 level rows and
   4 elevator shafts.
 - [x] AC-002: Given a running simulation, when a tick
   fires, then each elevator moves at most one floor.
@@ -549,6 +559,18 @@ Restart simulation
     -c "SELECT event_type, COUNT(*) FROM passenger_events GROUP BY event_type;"
   ```
 
+  Azure Container Apps smoke validation:
+
+  ```bash
+  az containerapp revision list \
+    --name ca-elevator-dispatch-dev \
+    --resource-group rg-elevator-dispatch \
+    --query '[].{name:name,active:properties.active,traffic:properties.trafficWeight,health:properties.healthState,replicas:properties.replicas}' \
+    -o table
+  curl -fsS https://ca-elevator-dispatch-dev.bluetree-41095b7a.eastus2.azurecontainerapps.io/
+  curl -fsS https://ca-elevator-dispatch-dev.bluetree-41095b7a.eastus2.azurecontainerapps.io/api/state
+  ```
+
 - Test data: Inline fixtures in test methods.
 - Regression risks: Dispatch heuristic changes may affect
   elevator selection order; wait-time math depends on
@@ -575,6 +597,11 @@ Restart simulation
 | Setup friction consumes workshop time | Medium | Medium | Provide Codespaces-first path, validation commands, and troubleshooting table |
 | Optional PostgreSQL persistence is mistaken for required baseline behavior | Medium | Medium | State clearly that baseline simulation remains in-memory |
 | Running app repopulates tables immediately after reset | Low | Medium | Document that restart creates a fresh run row and ticking can add events |
+| Azure PostgreSQL rejects non-allow-listed extensions | High | Medium | Generate UUIDs in Python and avoid `pgcrypto` / `gen_random_uuid()` in schema setup |
+| Container Apps serves `504` from unhealthy revisions | High | Medium | Check revision health, traffic split, console logs, and startup tracebacks before changing ingress |
+| Azure MFA policy blocks user-token write operations | High | High | Refresh `azd` auth or use the approved service-principal Terraform path for resource writes |
+| `azd deploy` cannot find existing ACR output | Medium | Medium | Set `AZURE_CONTAINER_REGISTRY_ENDPOINT` in the azd environment before deploying to existing resources |
+| Tracked TypeScript shims lose executable bits | Low | Medium | Temporarily chmod `tsc` shims for `npm run build`, then reset mode-only changes before handoff |
 
 ## Open Questions
 
@@ -600,6 +627,9 @@ Restart simulation
 | 2026-05-12 | Azure deployment guidance lives in scoped instructions and migration prompts | Prepares future Azure labs without changing starter runtime behavior | Facilitator |
 | 2026-05-12 | Cab color prompts are Review-agent PR workflows | Teaches scoped branch, PR, and Copilot review patterns with a low-risk UI change | Facilitator |
 | 2026-05-12 | `completed/` is an excluded facilitator reference solution | Supports rebuild-from-prompts demos without letting Copilot copy the finished workspace | Facilitator |
+| 2026-05-13 | Optional PostgreSQL UUIDs are generated in Python | Azure Database for PostgreSQL rejected `pgcrypto`; application-side UUIDs keep persistence portable | Facilitator |
+| 2026-05-13 | Container Apps deployment verification includes revision health and WebSocket checks | Endpoint `504` responses can hide startup failures until revision logs are reviewed | Facilitator |
+| 2026-05-13 | `azd auth login` is the preferred recovery for azd MFA token expiry | Azure CLI device-code login did not satisfy ARM write policy, while refreshed azd auth allowed deployment | Facilitator |
 
 ## Implementation Plan
 
@@ -625,6 +655,8 @@ Restart simulation
 14. Add Azure deployment instructions and migration prompt scaffolding.
 15. Add GitHub Copilot Review-agent prompts for small elevator cab color pull requests.
 16. Document the `completed/` reference-solution workflow and rebuild-lab caveats.
+17. Capture Azure deployment findings from the Container Apps validation run, including MFA behavior, ACR output values,
+    PostgreSQL extension avoidance, revision diagnostics, and post-deploy endpoint verification.
 
 ## Appendix
 
