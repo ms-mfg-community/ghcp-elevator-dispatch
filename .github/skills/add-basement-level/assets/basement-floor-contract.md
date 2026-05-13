@@ -35,8 +35,18 @@ exposed, basement should include `"label": "B1"`.
 - Use distinct but restrained styling for the basement row.
 - Keep elevator cabin positions stable when moving between B1 and floor 1.
 - Preserve desktop and mobile responsiveness with six total levels.
+- Keep all four elevator cabs visible in distinct shaft columns.
+- Keep cabs bounded by the visible shaft grid at the top and bottom levels.
+- Prefer addition-based CSS length expressions for dynamic offsets; do not rely on `calc()` multiplication for cab
+  positioning.
 
 ## Persistence Boundary
 
 Keep simulation state in memory. Update database-related code only if existing database tables, fixtures, or tests
 explicitly validate or serialize floor values. Do not add a new database or persistence layer for this feature.
+
+## Operational Caveats
+
+- In Codespaces, verify local backend health separately from the forwarded URL. A tunnel `502` can happen while
+  `127.0.0.1:7000` is serving successfully.
+- Use the workspace virtual environment for Python validation so FastAPI and Pydantic imports resolve.

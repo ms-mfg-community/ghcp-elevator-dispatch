@@ -56,27 +56,36 @@ npm install
 Start the app in in-memory mode:
 
 ```bash
-python -m uvicorn api.server:app --reload --port 7000
+python -m uvicorn api.server:app --host 0.0.0.0 --reload --port 7000
 ```
 
 Start the app with PostgreSQL persistence enabled:
 
 ```bash
 DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch \
-python -m uvicorn api.server:app --reload --port 7000
+python -m uvicorn api.server:app --host 0.0.0.0 --reload --port 7000
 ```
 
 Open <http://127.0.0.1:7000> to view the dashboard.
+
+In Codespaces, use the forwarded URL for port `7000`. A browser `HTTP ERROR 502` does not always mean FastAPI crashed:
+confirm the local backend first with `curl -fsS http://127.0.0.1:7000/api/state`. If that returns `200 OK`, refresh the
+forwarded page, check `gh codespace ports --codespace "$CODESPACE_NAME"`, and continue through GitHub's one-time
+"Codespaces Access Port" warning if it appears.
 
 ## Verify Changes
 
 Run these commands before handing off code changes:
 
 ```bash
+source .venv/bin/activate
 python -m compileall .
 python -m unittest discover -s tests -v
 npm run build
 ```
+
+Use the virtual environment for Python validation. Without it, tests that import FastAPI or Pydantic can fail even
+though the same commands pass after `source .venv/bin/activate`.
 
 ## Inspect PostgreSQL
 
@@ -114,3 +123,7 @@ Expected tables are `simulation_runs`, `passenger_events`, and `scenarios`. `sim
 - Preserve the 6-level, 4-elevator default scenario: B1 plus floors 1 through 5.
 - Prefer small, explicit modules and teachable heuristics over clever abstractions.
 - When changing TypeScript source, run `npm run build` so `ui/static/main.js` stays current.
+- Treat floor `-1` as a state/API value only. User-facing labels, status text, stop lists, and dashboard metadata should
+	say `B1`.
+- When changing the building visualization, verify every cab remains visible in its own shaft and inside the six floor
+	rows. Absolute-positioned cab tracks can be offset twice if CSS grid placement is left in place.

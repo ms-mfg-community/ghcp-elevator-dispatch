@@ -33,6 +33,19 @@ bash .github/skills/add-basement-level/scripts/check-api-basement-state.sh
 
 Run the `uvicorn` command from `workspace/`, or keep using the validation script for repository-root execution.
 
+When starting the app in Codespaces, bind to all interfaces so the forwarded port can reach the backend:
+
+```bash
+python -m uvicorn api.server:app --host 0.0.0.0 --reload --port 7000
+```
+
+If the forwarded URL returns `HTTP ERROR 502`, check local health before changing code:
+
+```bash
+curl -fsS http://127.0.0.1:7000/api/state
+gh codespace ports --codespace "$CODESPACE_NAME"
+```
+
 ## Pull Request Summary Checklist
 
 - Confirm B1 is stored as floor `-1` and displayed as `B1`.
@@ -40,4 +53,6 @@ Run the `uvicorn` command from `workspace/`, or keep using the validation script
 - Confirm passengers can start or end trips at B1.
 - Confirm `/api/state` includes basement floor data.
 - Confirm dashboard renders B1 at the bottom with distinct styling.
+- Confirm all four elevator cabs remain visible, in separate shafts, and bounded inside the building grid.
+- Confirm user-facing text says `B1`, not `floor -1`.
 - Report validation command results.

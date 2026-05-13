@@ -56,27 +56,45 @@ npm install
 Start the app in in-memory mode:
 
 ```bash
-python -m uvicorn api.server:app --reload --port 7000
+python -m uvicorn api.server:app --host 0.0.0.0 --reload --port 7000
 ```
 
 Start the app with PostgreSQL persistence enabled:
 
 ```bash
 DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch \
-python -m uvicorn api.server:app --reload --port 7000
+python -m uvicorn api.server:app --host 0.0.0.0 --reload --port 7000
 ```
 
 Open <http://127.0.0.1:7000> to view the dashboard.
+
+In Codespaces, open the forwarded port URL for port `7000`. If the forwarded page returns `HTTP ERROR 502`, first
+check whether the app is healthy inside the container:
+
+```bash
+curl -fsS http://127.0.0.1:7000/api/state
+gh codespace ports --codespace "$CODESPACE_NAME"
+```
+
+If localhost returns `200 OK`, the app is running and the 502 is usually a stale Codespaces tunnel or a one-time port
+access gate. Refresh the browser tab, confirm port `7000` is forwarded, and click GitHub's **Continue** button if the
+"Codespaces Access Port" warning appears. If nothing is listening on `7000`, restart `uvicorn` from `workspace/` with
+the virtual environment activated.
 
 ## Verify Changes
 
 Run these commands before handing off code changes:
 
 ```bash
+source .venv/bin/activate
 .venv/bin/python -m compileall api simulation tests
 .venv/bin/python -m unittest discover -s tests -v
 npm run build
 ```
+
+The Python validation commands depend on packages installed in `workspace/.venv`. Running the tests with the global
+Python interpreter can fail with imports such as `ModuleNotFoundError: No module named 'pydantic'` even when the
+application itself is correctly set up.
 
 If `npm run build` fails with `tsc: Permission denied` because the tracked TypeScript shim under `node_modules` is not
 executable, temporarily restore executable bits for validation and then reset the mode-only changes before handoff:
@@ -160,3 +178,8 @@ Deployment gotchas found during the Azure migration:
 - Preserve the 6-level, 4-elevator default scenario with B1 stored as floor `-1` and displayed as `B1`.
 - Prefer small, explicit modules and teachable heuristics over clever abstractions.
 - When changing TypeScript source, run `npm run build` so `ui/static/main.js` stays current.
+- Keep elevator cab tracks bounded to the shaft grid. If changing the dashboard layout, verify all four cabs remain
+  visible in distinct shafts and that B1 is the bottom row. Avoid relying on CSS `calc()` multiplication for cab offsets;
+  simple addition-based expressions are more reliable across browser contexts.
+- Small color-change PR labs should touch only the targeted selector in `workspace/ui/static/styles.css`. If
+  `workspace/ui/main.ts` is unchanged, `npm run build` should not rewrite `workspace/ui/static/main.js`.

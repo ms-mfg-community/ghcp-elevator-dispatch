@@ -9,7 +9,8 @@
 - Created: 2026-05-09
 - Last updated: 2026-05-13
 - Target release or lab milestone: Labs 01-04 complete; Labs 02.03-02.06 persistence and reset workflows; Lab 03.01 PR
-  review prompts; Azure migration preparation and Container Apps deployment validation
+  review prompts; Codespaces runtime troubleshooting; Azure migration preparation and Container Apps deployment
+  validation
 
 ## Summary
 
@@ -104,6 +105,8 @@ can extend in subsequent lab steps.
   workflows.
 - Demonstrate how small UI changes can be reviewed with GitHub Copilot Review-agent prompts through a branch and pull
   request workflow.
+- Capture workshop gotchas as reusable guidance, including Codespaces forwarded-port behavior, virtual-environment
+  validation, basement display labels, and cab layout regression checks.
 - Support a facilitator workflow where `workspace/` can be moved to `completed/` and rebuilt from indexed prompts while
   preserving the completed solution as excluded reference material.
 
@@ -133,13 +136,17 @@ can extend in subsequent lab steps.
 - Trigger: Starts the FastAPI server
 - Preconditions: Python venv created, dependencies installed
 - Main flow:
-  1. Activate `.venv` and run `uvicorn api.server:app --port 7000`.
+  1. Activate `.venv` and run `uvicorn api.server:app --host 0.0.0.0 --port 7000`.
   2. Open `http://localhost:7000` in a browser.
   3. Observe elevators moving, passengers spawning, and
      the dashboard updating in real time.
 - Alternate or error flows:
   - Port 7000 in use: uvicorn reports a bind error;
     participant picks another port with `--port`.
+  - Codespaces forwarded URL shows `HTTP ERROR 502`: participant checks `curl http://127.0.0.1:7000/api/state`, verifies
+    port forwarding with GitHub CLI, and restarts `uvicorn` only if no local process is healthy.
+  - Codespaces shows the one-time development-port warning: participant clicks **Continue** before expecting the
+    dashboard to load.
 - Outcome: Live dashboard renders the building view with
   elevator cabs, passenger dots, and status indicators.
 
@@ -262,7 +269,7 @@ can extend in subsequent lab steps.
 | FR-019 | The simulation shall stop after 1 000 ticks, auto-pause, set `finished` to true, and display a completion message. | Must | `MAX_TICKS = 1000` |
 | FR-020 | The UI shall show an alert banner and a "Restart simulation" button when the simulation finishes. | Must | |
 | FR-021 | POST `/api/restart` shall reset all simulation state to initial values and resume ticking from 0. | Must | |
-| FR-022 | Each elevator cab shall have a distinct color: ev-01 green, ev-02 blue, ev-03 purple, ev-04 pink. | Must | Applied via CSS class per cab |
+| FR-022 | Each elevator cab shall have a distinct default color: ev-01 green, ev-02 blue, ev-03 purple, ev-04 gray. | Must | Applied via CSS class per cab; Lab 03.01 demonstrates changing ev-04 to red in a focused PR |
 | FR-023 | The repository README shall provide tutorial-style setup paths, prerequisites, validation commands, repository tour, and troubleshooting. | Must | Modeled on hands-on lab structure |
 | FR-024 | The repository shall include reusable Copilot prompts and skills for repeatable lab operations. | Should | Prompt and skill files under `.github/` |
 | FR-025 | The devcontainer shall provide optional PostgreSQL schema inspection support without making persistence mandatory. | Should | PostgreSQL sidecar, init SQL, and psql script |
@@ -273,8 +280,10 @@ can extend in subsequent lab steps.
 | FR-030 | Azure deployment conventions shall be captured in path-scoped instructions for `workspace/**`. | Should | `.github/instructions/azure-deployment.instructions.md` |
 | FR-031 | The repository shall include GitHub Copilot Review-agent prompts that require a branch, focused change, pull request, and scoped review criteria. | Should | Cab color prompt variants under `03.01` |
 | FR-032 | The repository documentation shall explain the `completed/` folder as an excluded facilitator reference solution for rebuild labs. | Should | Do not treat as Copilot source context |
-| FR-033 | The live dashboard shall render elevator cab `ev-04` with a pink fill color. | Must | Verify the `.elevator-cab.cab-ev-04` style in the served UI |
+| FR-033 | The live dashboard shall keep elevator cab color changes scoped to the matching `.elevator-cab.cab-ev-*` selector. | Must | The Lab 03.01 PR exercise changes only `.elevator-cab.cab-ev-04` to red |
 | FR-034 | Azure deployment documentation shall capture tenant-specific MFA, `azd`, Container Apps, and PostgreSQL extension gotchas found during validation. | Should | Includes `pgcrypto` avoidance, `azd auth login`, ACR endpoint outputs, revision health, and endpoint smoke tests |
+| FR-035 | User-facing labels shall display floor `-1` as `B1` in controls, floor rows, metadata, status text, and stop lists. | Must | Floor `-1` remains the simulation/API value |
+| FR-036 | Dashboard cab positioning shall not depend on CSS `calc()` multiplication or stretched grid items. | Should | Use stable track bounds and verify all four cabs remain in visible shafts |
 
 ## Non-Functional Requirements
 
@@ -290,6 +299,8 @@ can extend in subsequent lab steps.
 | NFR-008 | Resilience | Database persistence must not block or crash the simulation when unavailable. | In-memory fallback |
 | NFR-009 | Operability | Database reset workflows preserve schema and constraints. | Delete rows, do not drop schema |
 | NFR-010 | Cloud portability | Optional PostgreSQL persistence avoids non-allow-listed PostgreSQL extensions. | No required `pgcrypto` or `gen_random_uuid()` dependency |
+| NFR-011 | Codespaces operability | A 502 on the forwarded URL must be diagnosed separately from local app health. | Local `/api/state` check documented |
+| NFR-012 | UI layout robustness | Elevator cabs remain inside the visible shaft grid and in distinct columns. | Four cabs visible across B1 and floors 1-5 |
 
 ## User Experience Requirements
 
@@ -312,6 +323,8 @@ can extend in subsequent lab steps.
 - Pull request states: Feature branch created, PR opened, Review-agent prompt submitted, review feedback addressed.
 - Rebuild lab states: Completed solution moved to `completed/`, empty `workspace/`, prompts executed in numeric order,
   rebuilt app validated against tests and smoke checks.
+- Runtime troubleshooting states: local backend healthy but forwarded URL gated, forwarded URL stale or 502, and backend
+  process not listening on port `7000`.
 
 ## Data Requirements
 
@@ -406,7 +419,7 @@ runtime checks rather than comparing directly against hidden completed files.
 
 ```text
 Building
-├── floor_count: int = 5
+├── floor_count: int = 6
 ├── basement_floor: int = -1
 ├── elevators: list[Elevator]  (4 cabs)
 ├── waiting_passengers: dict[int, list[Passenger]]
@@ -518,8 +531,10 @@ Restart simulation
   without database errors.
 - [x] AC-014: Given a small elevator cab color PR, when the participant invokes the matching `03.01` Review-agent prompt,
   then Copilot reviews the targeted selector, scope control, readability, and validation notes.
-- [ ] AC-015: Given the live dashboard is rendered, when elevator cab `ev-04` appears in the shaft grid, then its cab fill
-  color is pink and remains visually distinct from the other elevator cabs.
+- [x] AC-015: Given the live dashboard is rendered, when elevator cab `ev-04` appears in the shaft grid, then its default
+  cab fill is gray and remains visually distinct from the other elevator cabs.
+- [x] AC-016: Given the Lab 03.01 color-change workflow, when a participant opens a focused PR, then only the targeted
+  `.elevator-cab.cab-ev-04` selector changes to a readable red fill.
 
 ## Testing Strategy
 
@@ -532,18 +547,26 @@ Restart simulation
   ```bash
   python -m venv .venv
   .venv\Scripts\Activate.ps1   # Windows
+  source .venv/bin/activate     # macOS/Linux
   pip install -r requirements.txt
   python -m compileall api simulation tests
   python -m unittest discover -s tests -v
   npm run build
-  python -m uvicorn api.server:app --reload
+  python -m uvicorn api.server:app --host 0.0.0.0 --reload --port 7000
   ```
 
   Run with PostgreSQL persistence enabled:
 
   ```bash
   DATABASE_URL=postgresql://elevator:elevator@postgres:5432/elevator_dispatch \
-  python -m uvicorn api.server:app --reload --port 7000
+  python -m uvicorn api.server:app --host 0.0.0.0 --reload --port 7000
+  ```
+
+  Codespaces port-forwarding smoke validation:
+
+  ```bash
+  curl -fsS http://127.0.0.1:7000/api/state
+  gh codespace ports --codespace "$CODESPACE_NAME"
   ```
 
   From the repository root, inspect the optional PostgreSQL schema:
@@ -575,7 +598,7 @@ Restart simulation
 - Regression risks: Dispatch heuristic changes may affect
   elevator selection order; wait-time math depends on
   tick-interval alignment; cab color changes can regress if CSS selectors for individual elevator IDs are renamed or
-  overridden.
+  overridden; cab layout changes can hide later elevators if absolute tracks are also placed as grid children.
 
 ## Dependencies
 
@@ -602,6 +625,10 @@ Restart simulation
 | Azure MFA policy blocks user-token write operations | High | High | Refresh `azd` auth or use the approved service-principal Terraform path for resource writes |
 | `azd deploy` cannot find existing ACR output | Medium | Medium | Set `AZURE_CONTAINER_REGISTRY_ENDPOINT` in the azd environment before deploying to existing resources |
 | Tracked TypeScript shims lose executable bits | Low | Medium | Temporarily chmod `tsc` shims for `npm run build`, then reset mode-only changes before handoff |
+| Codespaces forwarded URL returns `502` while FastAPI is healthy | Medium | Medium | Check localhost `/api/state`, verify `gh codespace ports`, and refresh or restart the server only after confirming local state |
+| Python tests are run outside `workspace/.venv` | Medium | Medium | Activate `.venv` before validation so FastAPI, Pydantic, SQLAlchemy, and asyncpg imports resolve |
+| Cab tracks are offset by both CSS grid placement and absolute positioning | High | Medium | Clear grid placement for absolute tracks and verify ev-01 through ev-04 centers align with four shaft columns |
+| User-facing text leaks raw floor `-1` | Low | Medium | Reuse the shared floor-label helper for status messages, stop lists, controls, and metadata |
 
 ## Open Questions
 
@@ -630,6 +657,9 @@ Restart simulation
 | 2026-05-13 | Optional PostgreSQL UUIDs are generated in Python | Azure Database for PostgreSQL rejected `pgcrypto`; application-side UUIDs keep persistence portable | Facilitator |
 | 2026-05-13 | Container Apps deployment verification includes revision health and WebSocket checks | Endpoint `504` responses can hide startup failures until revision logs are reviewed | Facilitator |
 | 2026-05-13 | `azd auth login` is the preferred recovery for azd MFA token expiry | Azure CLI device-code login did not satisfy ARM write policy, while refreshed azd auth allowed deployment | Facilitator |
+| 2026-05-13 | Diagnose Codespaces 502 separately from backend health | The forwarded URL can fail or show a safety gate while `127.0.0.1:7000` is healthy | Facilitator |
+| 2026-05-13 | Use addition-based cab offset expressions | Browser support and grid interactions are more predictable than CSS multiplication in dynamic `calc()` strings | Facilitator |
+| 2026-05-13 | Treat Lab 03.01 ev-04 red as a focused PR exercise | Keeps the main branch default styling stable while teaching scoped PR review workflows | Facilitator |
 
 ## Implementation Plan
 
@@ -657,6 +687,8 @@ Restart simulation
 16. Document the `completed/` reference-solution workflow and rebuild-lab caveats.
 17. Capture Azure deployment findings from the Container Apps validation run, including MFA behavior, ACR output values,
     PostgreSQL extension avoidance, revision diagnostics, and post-deploy endpoint verification.
+18. Capture Codespaces, validation-environment, basement-label, cab-layout, and PR-review workflow gotchas as reusable
+  README, prompt, and skill guidance.
 
 ## Appendix
 

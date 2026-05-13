@@ -53,3 +53,17 @@ bash .github/skills/add-basement-level/scripts/check-api-basement-state.sh
 ## Regression Testing
 
 Verify that every elevator can still reach every supported level and that no existing floor becomes blocked or inaccessible because B1 was added. If validation fails, continue diagnosing until the root cause is fixed or clearly documented.
+
+## Lessons Learned and Gotchas
+
+- Treat `-1` as an internal value only. Any user-facing label, including status messages and scheduled-stop text, should
+	use `B1` through the shared floor-label helper.
+- After changing dashboard layout code, verify all four elevator cabs are visible in separate shafts and remain inside
+	the building grid at both B1 and floor 5.
+- Avoid dynamic CSS position strings that rely on `calc()` multiplication. Addition-based length expressions are more
+	reliable for cab and shaft offsets across browser contexts.
+- Absolute-positioned shaft tracks should not also depend on CSS grid placement; otherwise later cabs can be shifted into
+	the wrong shaft or clipped out of view.
+- A Codespaces forwarded URL returning `HTTP ERROR 502` is not always an application crash. Check local app health with
+	`curl http://127.0.0.1:7000/api/state`, confirm port `7000` forwarding, and account for GitHub's one-time development
+	port warning before editing simulation code.
