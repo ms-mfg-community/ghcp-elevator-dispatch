@@ -15,6 +15,7 @@ from api.database import (
 from simulation.building import Building
 from simulation.dispatcher import Dispatcher
 from simulation.elevator import Elevator
+from simulation.floors import next_floor_toward
 from simulation.passenger import Passenger
 
 # Probability that a new passenger appears on any given tick (0.0–1.0).
@@ -180,11 +181,12 @@ class SimulationEngine:
             elevator.direction = "idle"
             return
 
-        if target_floor > elevator.current_floor:
-            elevator.current_floor += 1
+        next_floor = next_floor_toward(elevator.current_floor, target_floor)
+        if next_floor > elevator.current_floor:
+            elevator.current_floor = next_floor
             elevator.direction = "up"
-        elif target_floor < elevator.current_floor:
-            elevator.current_floor -= 1
+        elif next_floor < elevator.current_floor:
+            elevator.current_floor = next_floor
             elevator.direction = "down"
         else:
             self._service_current_floor(elevator)
@@ -221,10 +223,9 @@ class SimulationEngine:
         if random.random() >= self.spawn_chance:
             return
 
-        floor_count = self.building.floor_count
-        origin = random.randint(1, floor_count)
+        origin = random.choice(self.building.accessible_floors)
         destination = random.choice(
-            [f for f in range(1, floor_count + 1) if f != origin]
+            [floor for floor in self.building.accessible_floors if floor != origin]
         )
         passenger = Passenger(origin_floor=origin, destination_floor=destination, requested_tick=self.building.tick)
         self.building.add_passenger(passenger)

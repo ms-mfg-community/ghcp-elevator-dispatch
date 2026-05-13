@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from itertools import count
 
+from simulation.floors import is_supported_floor
+
 
 _PASSENGER_COUNTER = count(1)
 
@@ -16,8 +18,8 @@ class Passenger:
 
     def __post_init__(self) -> None:
         for floor in (self.origin_floor, self.destination_floor):
-            if floor < 1 or floor > 5:
-                raise ValueError("Floors must be between 1 and 5.")
+            if not is_supported_floor(floor):
+                raise ValueError("Floors must be B1 or between 1 and 5.")
         if self.origin_floor == self.destination_floor:
             raise ValueError("Origin and destination floors must differ.")
 

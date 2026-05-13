@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from simulation.elevator import Elevator
+from simulation.floors import DISPLAY_FLOORS, SUPPORTED_FLOORS, floor_label
 from simulation.passenger import Passenger
 
 
@@ -17,7 +18,8 @@ def _default_elevators() -> list[Elevator]:
 
 @dataclass(slots=True)
 class Building:
-    floor_count: int = 5
+    floor_count: int = len(SUPPORTED_FLOORS)
+    accessible_floors: list[int] = field(default_factory=lambda: list(SUPPORTED_FLOORS))
     elevators: list[Elevator] = field(default_factory=_default_elevators)
     waiting_passengers: dict[int, list[Passenger]] = field(default_factory=dict)
     pending_passengers: list[Passenger] = field(default_factory=list)
@@ -31,7 +33,7 @@ class Building:
     wait_time_updated_tick: int = 0
 
     def __post_init__(self) -> None:
-        for floor in range(1, self.floor_count + 1):
+        for floor in self.accessible_floors:
             self.waiting_passengers.setdefault(floor, [])
 
     def add_passenger(self, passenger: Passenger) -> None:
@@ -63,9 +65,11 @@ class Building:
         return [
             {
                 "floor": floor,
+                "label": floor_label(floor),
                 "waiting_passengers": [passenger.to_dict() for passenger in self.waiting_passengers[floor]],
             }
-            for floor in range(self.floor_count, 0, -1)
+            for floor in DISPLAY_FLOORS
+            if floor in self.waiting_passengers
         ]
 
     def snapshot(self) -> dict[str, object]:

@@ -144,7 +144,7 @@ button:hover {
     border-radius: 20px;
     overflow: auto;
     border: 1px solid var(--line);
-    min-height: calc(5 * var(--floor-height));
+    min-height: calc(var(--floor-count, 6) * var(--floor-height));
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(240, 233, 219, 0.88));
 }
 
@@ -152,7 +152,7 @@ button:hover {
 .shaft-grid,
 .floor-metadata {
     display: grid;
-    grid-template-rows: repeat(5, var(--floor-height));
+    grid-template-rows: repeat(var(--floor-count, 6), var(--floor-height));
 }
 
 .floor-label {
@@ -161,6 +161,11 @@ button:hover {
     font-weight: 700;
     background: rgba(255, 255, 255, 0.35);
     border-top: 1px solid var(--line);
+}
+
+.floor-label.basement-floor {
+    background: rgba(27, 36, 48, 0.12);
+    color: var(--accent-strong);
 }
 
 .floor-label:first-child,
@@ -189,7 +194,7 @@ button:hover {
     z-index: 1;
     display: grid;
     grid-template-columns: repeat(4, var(--shaft-width));
-    grid-template-rows: repeat(5, var(--floor-height));
+    grid-template-rows: repeat(var(--floor-count, 6), var(--floor-height));
     pointer-events: none;
 }
 
@@ -199,6 +204,10 @@ button:hover {
     outline: 2px dotted rgba(27, 36, 48, 0.5);
     outline-offset: -2px;
     background-image: linear-gradient(90deg, rgba(13, 107, 95, 0.08), transparent 18%, transparent 82%, rgba(13, 107, 95, 0.08));
+}
+
+.shaft-cell.basement-floor {
+    background-color: rgba(27, 36, 48, 0.08);
 }
 
 .floor-meta {
@@ -212,6 +221,10 @@ button:hover {
     background: rgba(255, 255, 255, 0.4);
     font-size: 0.9rem;
     line-height: 1.35;
+}
+
+.floor-meta.basement-floor {
+    background: rgba(27, 36, 48, 0.1);
 }
 
 .floor-meta span {

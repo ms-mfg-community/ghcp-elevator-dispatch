@@ -22,6 +22,22 @@ class DispatcherTests(unittest.TestCase):
         self.assertEqual(selected, "ev-01")
         self.assertIn(2, building.elevators[0].scheduled_stops)
 
+    def test_assigns_elevator_to_basement_request(self) -> None:
+        building = Building(
+            elevators=[
+                Elevator(id="ev-01", current_floor=1),
+                Elevator(id="ev-02", current_floor=5),
+            ]
+        )
+        dispatcher = Dispatcher()
+        passenger = Passenger(origin_floor=-1, destination_floor=4)
+
+        selected = dispatcher.assign_passenger(building, passenger)
+
+        self.assertEqual(selected, "ev-01")
+        self.assertIn(-1, building.elevators[0].scheduled_stops)
+        self.assertIn(-1, building.elevators[0].allowed_floors)
+
     def test_queues_request_when_all_elevators_are_full(self) -> None:
         building = Building(
             elevators=[

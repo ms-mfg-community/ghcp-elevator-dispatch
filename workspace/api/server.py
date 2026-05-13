@@ -8,9 +8,10 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, field_validator
 
 from api.database import create_database_engine, dispose_database_engine
+from simulation.floors import is_supported_floor
 from simulation.simulation import SimulationEngine
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,8 +19,15 @@ engine = SimulationEngine(tick_interval=1.0)
 
 
 class PassengerRequest(BaseModel):
-    origin_floor: int = Field(ge=1, le=5)
-    destination_floor: int = Field(ge=1, le=5)
+    origin_floor: int
+    destination_floor: int
+
+    @field_validator("origin_floor", "destination_floor")
+    @classmethod
+    def supported_floor(cls, value: int) -> int:
+        if not is_supported_floor(value):
+            raise ValueError("Floors must be B1 or between 1 and 5.")
+        return value
 
 
 class ControlRequest(BaseModel):
