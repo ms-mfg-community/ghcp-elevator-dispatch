@@ -6,12 +6,30 @@ from simulation.simulation import SimulationEngine
 
 
 class SpawnPassengerTests(unittest.TestCase):
+    def test_passenger_allows_basement_trips(self) -> None:
+        passenger_from_basement = Passenger(origin_floor=-1, destination_floor=3)
+        passenger_to_basement = Passenger(origin_floor=4, destination_floor=-1)
+
+        self.assertEqual(passenger_from_basement.origin_floor, -1)
+        self.assertEqual(passenger_to_basement.destination_floor, -1)
+
+    def test_passenger_rejects_unsupported_floor(self) -> None:
+        with self.assertRaises(ValueError):
+            Passenger(origin_floor=0, destination_floor=3)
+
+    def test_snapshot_includes_basement_with_label(self) -> None:
+        engine = SimulationEngine(spawn_chance=0.0)
+
+        floors = engine.building.snapshot()["floors"]
+
+        self.assertEqual([floor["floor"] for floor in floors], [5, 4, 3, 2, 1, -1])
+        self.assertEqual(floors[-1]["label"], "B1")
+
     def test_spawns_passenger_when_random_below_threshold(self) -> None:
         engine = SimulationEngine(spawn_chance=0.5)
         with patch("simulation.simulation.random") as mock_random:
             mock_random.random.return_value = 0.1  # below 0.5
-            mock_random.randint.return_value = 1
-            mock_random.choice.return_value = 3
+            mock_random.choice.side_effect = [1, 3]
 
             engine._maybe_spawn_passenger()
 
@@ -38,8 +56,7 @@ class SpawnPassengerTests(unittest.TestCase):
         engine = SimulationEngine(spawn_chance=1.0)
         with patch("simulation.simulation.random") as mock_random:
             mock_random.random.return_value = 0.0
-            mock_random.randint.return_value = 2
-            mock_random.choice.return_value = 5
+            mock_random.choice.side_effect = [2, 5]
 
             engine._maybe_spawn_passenger()
 
@@ -47,6 +64,30 @@ class SpawnPassengerTests(unittest.TestCase):
         self.assertEqual(len(waiting), 1)
         self.assertEqual(waiting[0].origin_floor, 2)
         self.assertEqual(waiting[0].destination_floor, 5)
+
+    def test_guaranteed_spawn_can_start_at_basement(self) -> None:
+        engine = SimulationEngine(spawn_chance=1.0)
+        with patch("simulation.simulation.random") as mock_random:
+            mock_random.random.return_value = 0.0
+            mock_random.choice.side_effect = [-1, 4]
+
+            engine._maybe_spawn_passenger()
+
+        waiting = engine.building.waiting_passengers[-1]
+        self.assertEqual(len(waiting), 1)
+        self.assertEqual(waiting[0].origin_floor, -1)
+        self.assertEqual(waiting[0].destination_floor, 4)
+
+    def test_elevator_moves_between_floor_one_and_basement(self) -> None:
+        engine = SimulationEngine(spawn_chance=0.0)
+        elevator = engine.building.elevators[0]
+        elevator.current_floor = 1
+        elevator.add_stop(-1)
+
+        engine._advance_elevator(elevator)
+
+        self.assertEqual(elevator.current_floor, -1)
+        self.assertEqual(elevator.direction, "down")
 
     def test_counts_passengers_moved_when_they_exit(self) -> None:
         engine = SimulationEngine(spawn_chance=0.0)
