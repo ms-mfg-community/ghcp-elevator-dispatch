@@ -101,6 +101,7 @@ function renderBuilding(snapshot) {
     if (!shaftGrid) {
         return;
     }
+    const cabUpdates = [];
     snapshot.elevators.forEach((elevator, index) => {
         const shaftTrack = document.createElement("div");
         shaftTrack.className = "shaft-track";
@@ -122,10 +123,16 @@ function renderBuilding(snapshot) {
     `;
         shaftTrack.append(cab);
         shaftGrid.append(shaftTrack);
-        if (previousBottom !== undefined && window.getComputedStyle(cab).bottom !== targetBottom) {
-            cab.style.bottom = targetBottom;
+        if (previousBottom !== undefined) {
+            cabUpdates.push({ cab, targetBottom });
         }
     });
+    if (cabUpdates.length > 0) {
+        buildingView.getBoundingClientRect();
+        cabUpdates.forEach(({ cab, targetBottom }) => {
+            cab.style.bottom = targetBottom;
+        });
+    }
 }
 function renderMovementSummary(snapshot) {
     if (!movementSummary) {
