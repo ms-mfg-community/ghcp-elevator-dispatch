@@ -49,6 +49,10 @@ function formatFloor(floor: number): string {
     return floor === -1 ? "B1" : `Floor ${floor}`;
 }
 
+function displayFloorLabel(floorState: FloorState): string {
+    return floorState.label || formatFloor(floorState.floor);
+}
+
 function populateFloorOptions(): void {
     if (!originSelect || !destinationSelect) {
         return;
@@ -110,7 +114,7 @@ function renderFloorMetadata(floorState: FloorState, elevators: ElevatorState[])
 
     return `
         <div class="floor-meta${basementClass}">
-            <strong>${formatFloor(floorState.floor)}</strong>
+            <strong>${displayFloorLabel(floorState)}</strong>
             <span>${describeWaitingPassengers(floorState.waiting_passengers)}</span>
             <span>${elevatorStatus}</span>
         </div>
@@ -129,7 +133,7 @@ function renderBuilding(snapshot: Snapshot): void {
             const basementClass = floorState.floor === -1 ? " basement-floor" : "";
             return `
                 <div class="floor-label${basementClass}">
-                    <div>${formatFloor(floorState.floor)}</div>
+                    <div>${displayFloorLabel(floorState)}</div>
                     <div class="waiting-area">${renderWaitingPassengers(floorState.waiting_passengers)}</div>
                 </div>
             `;

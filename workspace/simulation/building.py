@@ -69,7 +69,6 @@ class Building:
                 "waiting_passengers": [passenger.to_dict() for passenger in self.waiting_passengers[floor]],
             }
             for floor in DISPLAY_FLOORS
-            if floor in self.waiting_passengers
         ]
 
     def snapshot(self) -> dict[str, object]:

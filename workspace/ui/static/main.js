@@ -13,6 +13,9 @@ const supportedFloors = [-1, 1, 2, 3, 4, 5];
 function formatFloor(floor) {
     return floor === -1 ? "B1" : `Floor ${floor}`;
 }
+function displayFloorLabel(floorState) {
+    return floorState.label || formatFloor(floorState.floor);
+}
 function populateFloorOptions() {
     if (!originSelect || !destinationSelect) {
         return;
@@ -65,7 +68,7 @@ function renderFloorMetadata(floorState, elevators) {
             .join("; ");
     return `
         <div class="floor-meta${basementClass}">
-            <strong>${formatFloor(floorState.floor)}</strong>
+            <strong>${displayFloorLabel(floorState)}</strong>
             <span>${describeWaitingPassengers(floorState.waiting_passengers)}</span>
             <span>${elevatorStatus}</span>
         </div>
@@ -82,7 +85,7 @@ function renderBuilding(snapshot) {
         const basementClass = floorState.floor === -1 ? " basement-floor" : "";
         return `
                 <div class="floor-label${basementClass}">
-                    <div>${formatFloor(floorState.floor)}</div>
+                    <div>${displayFloorLabel(floorState)}</div>
                     <div class="waiting-area">${renderWaitingPassengers(floorState.waiting_passengers)}</div>
                 </div>
             `;
